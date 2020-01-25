@@ -1,0 +1,486 @@
+#include<iostream>
+#include<sstream>
+#include<fstream>
+#include<cstdlib>
+#include<string>
+#include<vector>
+
+
+using namespace std;
+
+int membre(vector<int> tab, unsigned int j){
+	int ind = -1;
+	for(unsigned int i=1;i<=tab.size();i++)
+		if(tab[i-1]==j)
+			ind = i-1;
+	return ind;
+}
+
+
+/********************************Abdoul Bitar************************************************************
+Fonction d'ecriture de PLNE pour le probleme d'ordonnancement de lots dans la zone de photolithographie
+comme decrit dans la modelisation.
+*********************************************************************************************************/
+
+int main(int argc, char ** argv){
+	if(argc!=4){
+		cout<<"usage : plPhoto NomInstance FctObj(1->moves,2->wiCi,3->mask) Formulation(1-> (a,u), 2-> (u))";
+		exit(EXIT_FAILURE);
+	}
+
+	/******Chemins des fichiers a ouvrir pour recueillir les donnees******/
+
+	ostringstream chemin;
+	chemin<<("../../Instances/")<<argv[1]<<"/";
+	ostringstream cheminModel;
+	cheminModel<<chemin.str()<<"ModelData/";
+	ostringstream cheminStatus;
+	cheminStatus<<chemin.str()<<"StatusData/";
+	
+	/*******Ouverture du fichier au format .lp*******/
+	ostringstream pl;
+	pl<<"../FichiersPL/"<<argv[1]<<".lp";
+	ofstream fpl;
+	cout<<"Ecriture du fichier "<<pl.str()<<endl;
+	fpl.open(pl.str().c_str());
+
+	unsigned int fctObj = atoi(argv[2]);
+	unsigned int formulation = atoi(argv[3]);
+	
+	if(fctObj==3 && formulation==2){
+		cout<<"La formulation (u)_ijt n'est pas compatible avec cette fonction objectif. Choisissez l'une des deux autres."<<endl;
+		return(EXIT_FAILURE);	
+	}
+	
+	//Recueil des donnees complementaires
+
+	chemin<<"DonneesComp.txt";
+	ifstream fdonneesComp;
+	fdonneesComp.open(chemin.str().c_str());
+	char buff[512];
+	fdonneesComp.getline(buff,256);
+	unsigned int H,m,n,l,nB,f;
+	fdonneesComp.get();
+	fdonneesComp>>H;
+	fdonneesComp>>m;
+	fdonneesComp>>n;
+	fdonneesComp>>l;
+	fdonneesComp>>nB;
+	fdonneesComp>>f;
+	fdonneesComp.close();
+
+	unsigned int T = H;
+	/**
+	H = 50;
+	T = 60;
+	**/
+
+	//Recueil des nombres de plaquettes/wafers par lot + priorite des lots + masque requis
+	vector<int> w(n,0);
+	vector<int> c(n,0);
+	vector<int> phi(n,0);
+	int k,k1,k2,k3,k4;
+	ostringstream cheminStatusLot;
+	cheminStatusLot<<cheminStatus.str()<<"Lot.txt";
+	cout<<"Lecture du fichier "<<cheminStatusLot.str()<<endl;
+	ifstream fLot(cheminStatusLot.str().c_str(),ios::in);
+	if(fLot){
+		fLot.getline(buff,512);
+		//cout<<buff<<endl;
+		for(int i=0;i<n;i++){
+			fLot.getline(buff,512,';');
+			fLot.get();fLot.get();fLot.get();fLot.get();
+			fLot>>k1;fLot.get();
+			//cout<<k1<<endl;
+			w[i]=k1;
+			//cout<<"Nombre de wafers du lot J"<<i+1<<" : "<<w[i]<<endl;
+			fLot.getline(buff,256,';');
+			fLot.get();fLot.getline(buff,256,';');
+			fLot.getline(buff,256,';');
+			fLot>>k1;fLot.getline(buff,256,'E');
+			c[i]=k1;
+			/**/ c[i]=c[i]/k1; /**/
+			fLot>>k1;
+			phi[i]=k1;
+			//cout<<"Masque requis par le lot J"<<i+1<<" : A"<<k1<<endl;
+			fLot.getline(buff,256);
+		}
+	}
+	fLot.close();
+
+	//Recueil des temps d'execution + batch-config
+	vector< vector<int> >corresp(n); //donne les indices des machines specifiques a chaque lot
+	vector< vector<int> > invcorresp(m); //donne les indices des lots pour lesquels chaque machine est qualifiee
+	//On lit le fichier Processability une premiere fois pour remplir corresp (machines qualifiees)
+
+	ostringstream cheminStatusEx;
+	cheminStatusEx<<cheminStatus.str()<<"Processability.txt";
+	cout<<"Lecture du fichier "<<cheminStatusEx.str()<<endl;
+	ifstream fexec;
+	fexec.open(cheminStatusEx.str().c_str());
+	fexec.getline(buff,512);
+	while(fexec.good()){
+		fexec.getline(buff,256,'T');
+		fexec>>k;fexec.get();
+		fexec.getline(buff,256,'B');
+		fexec>>k1; //Numero du batch-config
+		fexec.getline(buff,256,'E');
+		fexec>>k2; //Numero de la machine
+		fexec.getline(buff,512);
+		corresp[k-1].push_back(k2);
+		invcorresp[k2-1].push_back(k);
+	}
+	//Pour regler un bug (tres?) bizarre
+	corresp[n-1].pop_back();
+	invcorresp[m-1].pop_back();
+	fexec.close();
+/**
+	for(int i=1;i<=n;i++){
+		cout<<"Machines qualifiees pour le lot "<<i<<" : ";
+		for(unsigned int j=1;j<=corresp[i-1].size();j++)
+			cout<<"Machine "<<corresp[i-1][j-1]<<" ";
+		cout<<endl;
+	}
+
+	for(int i=1;i<=m;i++){
+		cout<<"Lots qualifies pour la machine "<<i<<" : ";
+		for(unsigned int j=1;j<=invcorresp[i-1].size();j++)
+			cout<<"Lot "<<invcorresp[i-1][j-1]<<" ";
+		cout<<endl;
+	}
+**/
+	
+
+	vector< vector<int> >exec(n);
+	vector< vector<int> >batch(n);
+	
+	//Et on le lit une deuxieme fois pour prendre les donnees sur le temps d'execution.
+	fexec.open(cheminStatusEx.str().c_str());
+	fexec.getline(buff,512);
+	while(fexec.good()){
+		fexec.getline(buff,256,'T');
+		fexec>>k;fexec.get();
+		fexec.getline(buff,256,'B');
+		fexec>>k1; //Numero du batch-config
+		fexec.getline(buff,256,'E');
+		fexec>>k2; //Numero de la machine
+		fexec.get();
+		fexec>>k3; //PTIME		
+		batch[k-1].push_back(k1);
+		exec[k-1].push_back(k3);
+	//	fexec.get();
+	//	fexec>>k4; //CTIME
+		fexec.getline(buff,256);
+		//exec[k-1].push_back((k3*(w[k-1]-1)+k4)/10);
+	}
+	fexec.close();
+
+/**/
+	cout<<"Temps d'execution "<<endl;
+	for(int i=1;i<=n;i++){
+		for(int j=1;j<=m;j++){
+			int memb=-1;
+			for(unsigned int k=1;k<=corresp[i-1].size();k++)
+				if(corresp[i-1][k-1]==j)
+					memb=k-1;
+			if(memb!=-1)
+				cout<<" "<<exec[i-1][memb]<<" ";
+			else
+				cout<<"   ";
+		}
+	cout<<endl;
+	}
+
+	cout<<"Batch-configs "<<endl;
+	for(int i=1;i<=n;i++){
+		for(int j=1;j<=m;j++){
+			int memb=-1;
+			for(unsigned int k=1;k<=corresp[i-1].size();k++)
+				if(corresp[i-1][k-1]==j)
+					memb=k-1;
+			if(memb!=-1)
+				cout<<" "<<batch[i-1][memb]<<" ";
+			else
+				cout<<"   ";
+		}
+	cout<<endl;
+	}
+/**/
+
+	// Recueil des infos sur les masques
+/**/
+	vector<int> initMask(l,0);
+	ostringstream cheminStatusMask;
+	cheminStatusMask<<cheminStatus.str()<<"Reticle.txt";
+	cout<<"Lecture du fichier "<<cheminStatusMask.str()<<endl;
+	ifstream fMask(cheminStatusMask.str().c_str(),ios::in);
+	if(fMask){
+		fMask.getline(buff,512);
+		for(int i=0;i<l;i++){
+			fMask.getline(buff,512,';');
+			fMask.getline(buff,512,';');
+			char carac;
+			fMask>>carac;
+			if(carac == 'M'){
+				fMask.getline(buff,512,'E');
+				fMask>>initMask[i];
+			}
+			else{
+				initMask[i]=0;
+			}
+			fMask.getline(buff,512);
+			//cout<<"Emplacement initial du masque "<<i+1<<" : "<<initMask[i]<<endl;
+		}
+	}
+	fMask.close();
+
+/**/
+	//Lecture des familles ou types de batch-config
+
+	vector<int> familles(m,0);
+	ostringstream cheminModelFamille;
+	cheminModelFamille<<cheminModel.str()<<"LithoTools.txt";
+	cout<<"Lecture du fichier "<<cheminModelFamille.str()<<endl;
+	ifstream fMof(cheminModelFamille.str().c_str(),ios::in);
+	fMof.getline(buff,512);	
+	for(int i=0;i<m;i++){
+		fMof.getline(buff,512,';');
+		fMof.getline(buff,512,';');
+		fMof.getline(buff,512,';');
+		fMof>>familles[i];
+		//cout<<"Famille de la machine "<<i+1<<" : "<<familles[i]<<endl;
+	}
+
+
+/**/
+
+	//Lecture des temps de setup
+	
+	ostringstream cheminModelCOT;
+	cheminModelCOT<<cheminModel.str()<<"ChangeOverTime.txt";
+	cout<<"Lecture du fichier "<<cheminModelCOT.str()<<endl;
+	ifstream fCot(cheminModelCOT.str().c_str(),ios::in);
+	fCot.getline(buff,512);
+	vector< vector< vector<int> > > setup(f);
+	for(int f0=0;f0<f;f0++){
+		setup[f0].resize(nB);
+		for(int i=1;i<=nB;i++){
+			setup[f0][i-1].resize(nB);
+		}
+	}
+	while(fCot.good()){
+		fCot.getline(buff,512,'e');
+		fCot>>k;//Famille
+		fCot.get();
+		fCot.get();
+		fCot>>k1;//Batch-config 1
+		fCot.get();
+		fCot.get();
+		fCot>>k2;//Batch-config 2
+		fCot.get();
+		fCot>>setup[k-1][k1-1][k2-1];
+		//cout<<"Le temps de setup sur une machine de famille "<<k<<" pour passer du batch-config B"<<k1<<" au batch-config B"<<k2<<" est de : "<<setup[k-1][k1-1][k2-1]<<endl;
+	}
+	
+	//Ecriture de la fonction objectif
+/**/
+	switch (fctObj){
+		case 1 :fpl<<"Maximize"<<endl;
+			for(int i=1;i<=n;i++){
+				for(unsigned int j=1;j<=corresp[i-1].size();j++){
+					int borne = (H<T-exec[i-1][j-1])?H:T-exec[i-1][j-1];
+					for(int t=0;t<=borne;t++){
+						fpl<<(((t==0)&&(i*j==1))?" ":" +")<<((t<=H-exec[i-1][j-1])?(w[i-1]):(w[i-1]*(H-t)/exec[i-1][j-1]))<<"u"<<i<<"_"<<corresp[i-1][j-1]<<"_"<<t;					
+					}				
+				}		
+			}
+			break;
+
+		case 2 :fpl<<"Minimize"<<endl;
+			for(int i=1;i<=n;i++){
+				for(unsigned int j=1;j<=corresp[i-1].size();j++){
+					for(int t=0;t<=T-exec[i-1][j-1];t++){
+						fpl<<(((i*j==1)&&(t==0))?" ":" +")<</**c[i-1]***/(t+exec[i-1][j-1])<<"u"<<i<<"_"<<corresp[i-1][j-1]<<"_"<<t;	
+					}				
+				}			
+			}
+			break;
+
+		default :fpl<<"Minimize"<<endl;
+			for(int t=0;t<=T;t++){
+				for(int i=1;i<=l;i++){
+					fpl<<((i+t==1)?" ":" +")<<"a"<<i<<"_"<<m+1<<"_"<<t;
+				}
+			}
+			break;
+	}		
+
+	fpl<<endl<<"Subject To"<<endl;
+
+	//Ecriture des contraintes
+	cout<<"m = "<<m<<endl<<"n = "<<n<<endl<<"l = "<<l<<endl;
+	
+	//1 Un lot s'execute une unique fois
+	cout<<"Ecriture des contraintes de type 1..."<<endl;
+	
+	for(int i=1;i<=n;i++){
+		for(unsigned int j=1;j<=corresp[i-1].size();j++){
+			for(int t=0;t<=T-exec[i-1][j-1];t++){
+				//cout<<T<<" "<<exec[i-1][j-1]<<endl;cin.get();
+				fpl<<((j+t==1)?" ":" +")<<"u"<<i<<"_"<<corresp[i-1][j-1]<<"_"<<t;			
+			}
+		}
+		fpl<<" = 1"<<endl;	
+	}
+/**/
+	//2 Un seul lot en cours d'execution a la fois sur une machine et temps de setup
+	cout<<"Ecriture des contraintes de type 2..."<<endl;
+	int nbterm = 0;
+	for(int i=1;i<=n;i++){
+		for(unsigned int j=1;j<=corresp[i-1].size();j++){
+			int indicemachine = corresp[i-1][j-1];
+			for(int t=0;t<=T-exec[i-1][j-1];t++){
+				nbterm = 0;
+				for(unsigned int i0=1;i0<=invcorresp[indicemachine-1].size();i0++){
+					int indiceLotCourant = invcorresp[indicemachine-1][i0-1];
+					if(indiceLotCourant != i){
+						int indicejPouri0 = membre(corresp[indiceLotCourant-1],indicemachine);
+						int borne = (T-exec[indiceLotCourant-1][indicejPouri0]<=t+exec[i-1][j-1]-1+setup[familles[indicemachine-1]-1][batch[i-1][j-1]-1][batch[indiceLotCourant-1][indicejPouri0]-1])?T-exec[indiceLotCourant-1][indicejPouri0]:t+exec[i-1][j-1]-1+setup[familles[indicemachine-1]-1][batch[i-1][j-1]-1][batch[indiceLotCourant-1][indicejPouri0]-1];
+						for(int t0=t;t0<=borne;t0++){
+							fpl<<" + u"<<indiceLotCourant<<"_"<<indicemachine<<"_"<<t0;
+							nbterm++;
+						}
+					}			
+				}
+				if(nbterm!=0)
+					fpl<<" +"<<nbterm<<" u"<<i<<"_"<<indicemachine<<"_"<<t<<" <= "<<nbterm<<endl;
+			}
+		}	
+	}
+/**/
+
+	/**
+		A partir de la, on a mis toutes les contraintes pour un probleme d'ordonnancement a m machines paralleles 
+		avec qualification des machines et temps de setup dependant de la sequence. Dans ce qui suit, on va rajouter a 
+		ce probleme une ressource auxiliaire (le masque).
+	**/
+	
+	if(formulation==2){
+		cout<<"Ecriture des contraintes de type 3..."<<endl;
+		for(int i=1;i<=n;i++){
+			for(unsigned int j=1;j<=corresp[i-1].size();j++){
+				int indicemachine = corresp[i-1][j-1];
+				for(int t=0;t<=T-exec[i-1][j-1];t++){
+					nbterm=0;
+					for(int i0=1;i0<=n;i0++){
+						if((phi[i0-1]==phi[i-1])&&(i0!=i)){
+							for(unsigned int j0=1;j0<=corresp[i0-1].size();j0++){
+							 if(corresp[i-1][j-1]!=corresp[i0-1][j0-1]){
+							  int borne= (T-exec[i0-1][j0-1]<=t+exec[i-1][j-1])?T-exec[i0-1][j0-1]:t+exec[i-1][j-1];
+							   for(int t0=t;t0<=borne;t0++){
+							  	fpl<<" + u"<<i0<<"_"<<corresp[i0-1][j0-1]<<"_"<<t0;
+								nbterm++;
+							  }
+							 }
+							}					
+						}				
+					}
+					if(nbterm!=0)
+						fpl<<" +"<<nbterm<<" u"<<i<<"_"<<indicemachine<<"_"<<t<<" <= "<<nbterm<<endl;
+				}
+			}
+		}
+	
+
+		cout<<"Ecriture des contraintes de type 4..."<<endl;
+		//4 Position initiale des masques
+		for(int j=1;j<=m;j++){
+			for(unsigned int i=1;i<=invcorresp[j-1].size();i++){
+				if(initMask[phi[invcorresp[j-1][i-1]-1]-1]!=j){
+					fpl<<" + u"<<invcorresp[j-1][i-1]<<"_"<<j<<"_0";		
+				}		
+			}
+			fpl<<" = 0"<<endl;
+		}
+	}
+
+
+/**/	if(formulation == 1){
+	cout<<endl<<endl<<"Introduction des Masques"<<endl<<endl;	
+		
+	cout<<"Ecriture des contraintes de type 4..."<<endl;
+	//4 Un masque a un seul endroit a la fois
+	
+	for(int i=1;i<=l;i++){
+		for(int t=0;t<=T;t++){
+			for(int j=0;j<=m+1;j++){
+				fpl<<" + a"<<i<<"_"<<j<<"_"<<t;		
+			}
+			fpl<<" = 1"<<endl;		
+		}
+	}
+	
+	cout<<"Ecriture des contraintes de type 5..."<<endl;
+	//5 Emplacements initiaux des masques
+	for(int i=1;i<=l;i++){
+		fpl<<" + a"<<i<<"_"<<initMask[i-1]<<"_0";
+		fpl<<" = 1"<<endl;
+	}
+/**/	
+	cout<<"Ecriture des contraintes de type 6..."<<endl;
+	//6 Temps de transport unitaire d'un masque
+	for(int i=1;i<=l;i++){
+		for(int t=0;t<=T-1;t++){
+			for(int j=0;j<=m;j++){
+				nbterm=0;
+				for(int j0=0;j0<=m;j0++){
+					if(j0 != j){
+						fpl<<" + a"<<i<<"_"<<j0<<"_"<<t+1;
+						nbterm++;						
+					}				
+				}
+				if(nbterm!=0)
+					fpl<<" + "<<nbterm<<" a"<<i<<"_"<<j<<"_"<<t;
+				fpl<<" <= "<<nbterm<<endl;			
+			}
+		}
+	}
+/**/	
+	cout<<"Ecriture des contraintes de type 7..."<<endl;
+	//7 Les lots ont besoin de leur masque
+	for(int i=1;i<=n;i++){
+		for(unsigned int j=1;j<=corresp[i-1].size();j++){
+			for(int t=0;t<=T-exec[i-1][j-1];t++){
+				for(int t0=t;t0<=t+exec[i-1][j-1]-1;t0++){				
+					fpl<<" + a"<<phi[i-1]<<"_"<<corresp[i-1][j-1]<<"_"<<t0;
+					//cout<<" + a"<<phi[i-1]<<"_"<<corresp[i-1][j-1]<<"_"<<t0<<endl;			
+				}
+					fpl<<" - "<<exec[i-1][j-1]<<" u"<<i<<"_"<<corresp[i-1][j-1]<<"_"<<t;
+				fpl<<" >= 0"<<endl;
+			}
+		}
+	}
+/**/
+	}
+/**/
+
+	//Specification des variables binaires
+	fpl<<"Binaries"<<endl;
+	for(int i=1;i<=n;i++)		
+		for(unsigned int j=1;j<=corresp[i-1].size();j++)
+			for(int t=0;t<=T-exec[i-1][j-1];t++)
+				fpl<<"u"<<i<<"_"<<corresp[i-1][j-1]<<"_"<<t<<endl;
+	if(formulation==1){
+		for(int i=1;i<=l;i++)		
+			for(int j=0;j<=m+1;j++)
+				for(int t=0;t<=T;t++)
+					fpl<<"a"<<i<<"_"<<j<<"_"<<t<<endl;
+	}
+
+	fpl<<"End";
+	fpl.close();
+	return EXIT_SUCCESS;
+
+}
+
+

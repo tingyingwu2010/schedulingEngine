@@ -1,0 +1,1 @@
+TechnoGroup;LotTypeGroup;BRICK_GENE;OPERATION_GENE;MovesObj;MovesDone;Begin_Date;End_Date;

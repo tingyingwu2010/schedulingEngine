@@ -1,0 +1,32 @@
+Photolithography Optimization Solver Program.
+
+This C++ Project contains a set of solving algorithms for the scheduling problem with unrelated parallel machines, auxiliary resources and sequence-dependent setup times. Three objective functions are dealt with:
+
+1. Maximizing number of wafers before a given horizon
+2. Minimizing the weighted sum of completion times
+3. Minimizing the number of auxiliary resources moves.
+
+A multi-objective version of the problem (minimizing Chebychev weighted sum of the criteria) is also handled.
+
+This document describes the features of this module, and the way to use it.
+
+Install Process
+
+------------------------------------
+
+You will need: 
+	SCIP, version 3.0.0, linked with
+	Zimpl, version 3.3.0 and an LP solver, such as
+	SoPlex (version 2.0.0).
+	
+	GraphViz for the visualization of the schedule (neato module is necessary)
+	
+	typing "make" should be sufficient to generate the binary, which is located in the "bin" directory
+
+
+Algorithms
+
+-----------------------------------
+
+
+

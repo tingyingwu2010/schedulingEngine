@@ -1,0 +1,9 @@
+JOB_ID;STEP_NAME;Planned_Arrival_Time3;Carrier2;LOT_QUANTITY;PIT2;PIT_CLASS2;Start_Operation_Time3;MES_PRIORITY;Weight2;Step_Start_Time3;State_Start_Time3;CONSTRAIN_START_TIME;CONSTRAIN_DURATION;LOT_TYPE;Location2;Status2;BRICK_NAME;GENERIC_OPERATION_NAME;PRODUCT_NAME;TECHNO_NAME;RESOLVED_RECIPE_NAME;TRACK_RECIPE_NAME;MASK_ID;CAPABILITY;USAGE;Report_Run_Time3
+JOB1;0;;;25;;;;;1;;;;;;;Wait;;;;;;;MASK1;;;
+JOB2;0;;;25;;;;;1;;;;;;;Wait;;;;;;;MASK2;;;
+JOB3;0;;;25;;;;;1;;;;;;;Wait;;;;;;;MASK3;;;
+JOB4;0;;;25;;;;;1;;;;;;;Wait;;;;;;;MASK1;;;
+JOB5;0;;;25;;;;;1;;;;;;;Wait;;;;;;;MASK3;;;
+JOB6;0;;;25;;;;;1;;;;;;;Wait;;;;;;;MASK1;;;
+JOB7;0;;;25;;;;;1;;;;;;;Wait;;;;;;;MASK3;;;
+JOB8;0;;;25;;;;;1;;;;;;;Wait;;;;;;;MASK2;;;

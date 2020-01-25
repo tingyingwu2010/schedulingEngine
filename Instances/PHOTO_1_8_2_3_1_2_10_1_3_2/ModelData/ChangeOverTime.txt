@@ -1,0 +1,5 @@
+BATCH_CONFIG_TYPE;FROM_BATCH_CONFIG;TO_BATCH_CONFIG;CHANGEOVER_TIME
+Batch_Config_Type1;B1;B1;0
+Batch_Config_Type1;B1;B2;2
+Batch_Config_Type1;B2;B1;2
+Batch_Config_Type1;B2;B2;0

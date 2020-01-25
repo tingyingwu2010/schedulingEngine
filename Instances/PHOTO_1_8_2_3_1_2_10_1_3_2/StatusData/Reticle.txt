@@ -1,0 +1,4 @@
+Mask_ID;State_Name;Equipment_Name;Availability_Date;Report_Run_Time
+MASK1;Production;DEPOT/STOCK0;;
+MASK2;Production;DEPOT/STOCK0;;
+MASK3;Production;DEPOT/STOCK0;;

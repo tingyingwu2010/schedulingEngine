@@ -1,0 +1,10 @@
+all : genePhoto
+
+genePhoto.o : genePhoto.cpp
+	g++ -c genePhoto.cpp
+
+genePhoto : genePhoto.o
+	g++ genePhoto.o -o genePhoto
+
+clean :
+	rm -f *.o genePhoto
