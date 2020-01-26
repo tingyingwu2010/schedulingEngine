@@ -37,7 +37,7 @@ include $(SCIPDIR)/make/make.project
 
 
 MAINNAME	=	POP
-MAINOBJ		=	ApproxPhoto.o MetaheuristiquesPhoto.o PlmoPhoto.o PlnePhoto.o Instance.o main.o POP.o POPCte.o Individu.o
+MAINOBJ		=	ApproxMethod.o Metaheuristics.o ilpmoModel.o ilpModel.o Instance.o main.o POP.o POPCte.o Individual.o
 MAINSRC		=	$(addprefix $(SRCDIR)/,$(MAINOBJ:.o=.cpp))
 MAINDEP		=	$(SRCDIR)/depend.cppmain.$(OPT)
 

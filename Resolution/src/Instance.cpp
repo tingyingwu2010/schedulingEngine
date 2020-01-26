@@ -49,7 +49,7 @@ void Instance::afficheTemps(){
 	}
 }
 
-void Instance::modifierHorizon(int nH){
+void Instance::modifyHorizon(int nH){
 	H=nH;
 }
 

@@ -1,29 +1,29 @@
 digraph G{
 label="Solution of the scheduling problem with 8 jobs, 2 machines and 3 masks for the minimum weighted sum of completion times, given by ILP method."
 M1[pos="-1,2!",shape="none",size=2]
-J1[pos="4,2!",width="4",height="1",color="0.07008 0.143259 0.271778",shape=box,style="rounded,filled",fillcolor="0.07008 0.143259 0.271778"]
+J1[pos="4,2!",width="4",height="1",color="0.983295 0.0026881 0.736458",shape=box,style="rounded,filled",fillcolor="0.983295 0.0026881 0.736458"]
 2[pos="2,-0.5!",shape=none]
 6[pos="6,-0.5!",shape=none]
-J2[pos="1.5,2!",width="1",height="1",color="0.672563 0.245745 0.581644",shape=box,style="rounded,filled",fillcolor="0.672563 0.245745 0.581644"]
+J2[pos="1.5,2!",width="1",height="1",color="1.95237 0.88821 0.34174",shape=box,style="rounded,filled",fillcolor="1.95237 0.88821 0.34174"]
 1[pos="1,-0.5!",shape=none]
 2[pos="2,-0.5!",shape=none]
-J4[pos="9,2!",width="2",height="1",color="0.07008 0.143259 0.271778",shape=box,style="rounded,filled",fillcolor="0.07008 0.143259 0.271778"]
+J4[pos="9,2!",width="2",height="1",color="0.983295 0.0026881 0.736458",shape=box,style="rounded,filled",fillcolor="0.983295 0.0026881 0.736458"]
 8[pos="8,-0.5!",shape=none]
 10[pos="10,-0.5!",shape=none]
-J7[pos="14,2!",width="8",height="1",color="0.773239 0.915465 1.03118",shape=box,style="rounded,filled",fillcolor="0.773239 0.915465 1.03118"]
+J7[pos="14,2!",width="8",height="1",color="2.0235 0.50215 0.753879",shape=box,style="rounded,filled",fillcolor="2.0235 0.50215 0.753879"]
 10[pos="10,-0.5!",shape=none]
 18[pos="18,-0.5!",shape=none]
 M2[pos="-1,1!",shape="none",size=2]
-J3[pos="22.5,1!",width="7",height="1",color="0.773239 0.915465 1.03118",shape=box,style="rounded,filled",fillcolor="0.773239 0.915465 1.03118"]
+J3[pos="22.5,1!",width="7",height="1",color="2.0235 0.50215 0.753879",shape=box,style="rounded,filled",fillcolor="2.0235 0.50215 0.753879"]
 19[pos="19,-0.5!",shape=none]
 26[pos="26,-0.5!",shape=none]
-J5[pos="3,1!",width="4",height="1",color="0.773239 0.915465 1.03118",shape=box,style="rounded,filled",fillcolor="0.773239 0.915465 1.03118"]
+J5[pos="3,1!",width="4",height="1",color="2.0235 0.50215 0.753879",shape=box,style="rounded,filled",fillcolor="2.0235 0.50215 0.753879"]
 1[pos="1,-0.5!",shape=none]
 5[pos="5,-0.5!",shape=none]
-J6[pos="15,1!",width="6",height="1",color="0.07008 0.143259 0.271778",shape=box,style="rounded,filled",fillcolor="0.07008 0.143259 0.271778"]
+J6[pos="15,1!",width="6",height="1",color="0.983295 0.0026881 0.736458",shape=box,style="rounded,filled",fillcolor="0.983295 0.0026881 0.736458"]
 12[pos="12,-0.5!",shape=none]
 18[pos="18,-0.5!",shape=none]
-J8[pos="7.5,1!",width="5",height="1",color="0.672563 0.245745 0.581644",shape=box,style="rounded,filled",fillcolor="0.672563 0.245745 0.581644"]
+J8[pos="7.5,1!",width="5",height="1",color="1.95237 0.88821 0.34174",shape=box,style="rounded,filled",fillcolor="1.95237 0.88821 0.34174"]
 5[pos="5,-0.5!",shape=none]
 10[pos="10,-0.5!",shape=none]
 0[pos="0,-0.5!",shape=none]
@@ -35,15 +35,15 @@ Legend [pos="-2,-2!",shape=none, margin=0, label=< <TABLE BORDER="0" CELLBORDER=
 </TR>
 <TR>
 <TD>A1</TD>
-<TD BGCOLOR="0.07008 0.143259 0.271778"></TD>
+<TD BGCOLOR="0.983295 0.0026881 0.736458"></TD>
 </TR>
 <TR>
 <TD>A2</TD>
-<TD BGCOLOR="0.672563 0.245745 0.581644"></TD>
+<TD BGCOLOR="1.95237 0.88821 0.34174"></TD>
 </TR>
 <TR>
 <TD>A3</TD>
-<TD BGCOLOR="0.773239 0.915465 1.03118"></TD>
+<TD BGCOLOR="2.0235 0.50215 0.753879"></TD>
 </TR>
 
  </TABLE>

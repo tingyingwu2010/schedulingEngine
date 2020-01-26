@@ -16,119 +16,112 @@ void Instance::printVector(vector<unsigned int> v){
 	cout<<endl;
 }
 
-//Procédure de croisement
-Individu Instance::CroisementMemetique(Individu parent1, Individu parent2){
-	vector<int> motif(n);
+Individual Instance::crossoverMemetic(Individual parent1, Individual parent2){
+	vector<int> pattern(n);
 	vector<int> buf;
-	vector<int> indicesDe1;
-	Individu enfant(parent1.fctObj,n,corresp);
+	vector<int> onesIndices;
+	Individual child(parent1.fctObj,n,corresp);
 	for(int i=0;i<n;i++){
-		motif[i]=rand()%2;
-		if(motif[i]==1)
-			indicesDe1.push_back(i);
+		pattern[i]=rand()%2;
+		if(pattern[i] == 1)
+			onesIndices.push_back(i);
 	}	
-	int ii=0;
-	int j=0;
+	int ii = 0;
+	int j = 0;
 	while(ii<n){
-		if(motif[ii]==0){
-			enfant.machines[ii]=parent1.machines[ii];
-			enfant.jobs[ii]=parent1.jobs[ii];
+		if(pattern[ii] == 0){
+			child.machines[ii]=parent1.machines[ii];
+			child.jobs[ii]=parent1.jobs[ii];
 		}
 		else{
-			enfant.machines[ii]=-1;
+			child.machines[ii]=-1;
 			buf.push_back(parent1.jobs[ii]);
 		}
 		ii++;
 	}
-	j=0;
+	j = 0;
 	for(int k=0;k<n;k++){
 		int mem = member(buf,parent2.jobs[k]);
-		if(mem!=-1){
-			enfant.machines[indicesDe1[j]] = parent2.machines[k];
-			enfant.jobs[indicesDe1[j]] = parent2.jobs[k];
+		if(mem != -1){
+			child.machines[onesIndices[j]] = parent2.machines[k];
+			child.jobs[onesIndices[j]] = parent2.jobs[k];
 			buf.erase(buf.begin() + mem);
 			j++;
 		}
 	}
-	return enfant;
+	return child;
 }
 
-//Procédure spéciale de calcul de la nouvelle fitness pour la somme des Ci apres le voisinage V1
-double Instance::nouvelleFitness(vector<vector<unsigned int> > &enfant, vector<unsigned int> &completionTimes, int indice, double fitness){	
-	vector<int> tDispo(m,0); //Date de disponibilité au plus tôt de chaque machine (t=0 au début)
-	vector<int> D(m,0); //Dernier job sur chaque machine (nécessaire pour calculer le setup) : 0 si aucun
+double Instance::nouvelleFitness(vector<vector<unsigned int> > &child, vector<unsigned int> &completionTimes, int indice, double fitness){	
+	vector<int> tDispo(m,0); // Earliest availability date per machine (t=0 at start)
+	vector<int> D(m,0); // Last job per machine (used to compute setup times), 0 if none
 	for(int j=0;j<m;j++){
 		int k(indice-1);
-		while(k>=0){
-			if(enfant[0][k]-1==(unsigned int)(j)){
-				tDispo[j]=completionTimes[k];	
-				D[j]=enfant[1][k];		
-				k=0;			
+		while(k >= 0){
+			if(child[0][k]-1 == (unsigned int)(j)){
+				tDispo[j] = completionTimes[k];	
+				D[j] = child[1][k];		
+				k = 0;			
 			}
 			k--;
 		}
 	}
-	vector<unsigned int> S(l); //Machine courante de chaque masque
-	vector<int> tMasque(l,0); //Date de dispo au plus tôt de chaque masque
+	vector<unsigned int> S(l); // Current machine per mask
+	vector<int> tMasque(l,0); // Earliest availability date per mask
 	for(int i=0;i<l;i++){
 		S[i]=initMask[i];
 		int k(indice-1);
 		while(k>=0){
-			if(phi[enfant[1][k]-1]-1==i){
-				S[i]=enfant[0][k];
+			if(phi[child[1][k]-1]-1==i){
+				S[i]=child[0][k];
 				tMasque[i]=completionTimes[k];				
 				k=0;			
 			}
 			k--;
 		}
 	}
-	///////////////////////////////////////////////////////////////
-	//Les données sont désormais préparées
-	//On commence à l'indice donné
-	for(int j=indice;j<n;j++){//On parcourt l'individu
-		//cout<<"Masque A"<<phi[jobact-1]<<", Job à la position "<<j+1<<" : job J"<<jobact<<" pour la machine M"<<machact<<" : "<<endl;
-		if(S[phi[enfant[1][j]-1]-1]!=enfant[0][j]){
-			tMasque[phi[enfant[1][j]-1]-1]++; //Si il faut déplacer le masque
-			S[phi[enfant[1][j]-1]-1]=enfant[0][j];
+	// Data prepared. Start at given index
+	for(int j=indice;j<n;j++){ // Browse the individual
+		if(S[phi[child[1][j]-1]-1]!=child[0][j]){
+			tMasque[phi[child[1][j]-1]-1]++; // If moving the mask is needed
+			S[phi[child[1][j]-1]-1]=child[0][j];
 		}
 		int imQ(0);
-		int imQ1=indexMachineQualif(enfant[1][j],enfant[0][j]);
-		if(D[enfant[0][j]-1]!=0)
-			imQ=indexMachineQualif(D[enfant[0][j]-1],enfant[0][j]);
-		int Beta=(D[enfant[0][j]-1]==0)?0:setup[families[enfant[0][j]-1]-1][batch[D[enfant[0][j]-1]-1][imQ]-1][batch[enfant[1][j]-1][imQ1]-1];
+		int imQ1=indexMachineQualif(child[1][j],child[0][j]);
+		if(D[child[0][j]-1]!=0)
+			imQ=indexMachineQualif(D[child[0][j]-1],child[0][j]);
+		int Beta=(D[child[0][j]-1]==0)?0:setup[families[child[0][j]-1]-1][batch[D[child[0][j]-1]-1][imQ]-1][batch[child[1][j]-1][imQ1]-1];
 		//formule
-		int Fin=max(tMasque[phi[enfant[1][j]-1]-1],tDispo[enfant[0][j]-1]+Beta)+exec[enfant[1][j]-1][imQ1];
+		int Fin=max(tMasque[phi[child[1][j]-1]-1],tDispo[child[0][j]-1]+Beta)+exec[child[1][j]-1][imQ1];
 		//On actualise toutes les infos, sauf si on est à la fin, auquel cas ça ne sert à rien
 		if(j-n+1!=0){
-			D[enfant[0][j]-1]=enfant[1][j];
-			tDispo[enfant[0][j]-1]=Fin;
-			tMasque[phi[enfant[1][j]-1]-1]=Fin;
+			D[child[0][j]-1]=child[1][j];
+			tDispo[child[0][j]-1]=Fin;
+			tMasque[phi[child[1][j]-1]-1]=Fin;
 		}
 		//Actualisation de la fitness!!
-		fitness=fitness+c[enfant[1][j]-1]*(Fin-completionTimes[j]);
+		fitness=fitness+c[child[1][j]-1]*(Fin-completionTimes[j]);
 		//La date de fin est conservée
 		completionTimes[j]=Fin;
 	}
 	return fitness;
 }
 
-//Méthode de décodage
-vector<vector<vector<int> > > Instance::HeuristiqueMemetique(Individu individu/**, vector<unsigned int> &completionTimes**/){
+vector<vector<vector<int> > > Instance::HeuristiqueMemetique(Individual individual){
 	vector<vector<vector<int> > > scheduleFinal(m);
-	vector<int> tDispo(m,0); //Date de disponibilité au plus tôt de chaque machine (t=0 au début)
-	vector<int> S(l); //Machine courante de chaque masque
-	vector<int> tMasque(l,0); //Date de dispo au plus tôt de chaque masque
-	vector<int> D(m,0); //Dernier job sur chaque machine (nécessaire pour calculer le setup) : 0 si aucun
+	vector<int> tDispo(m,0); // Earliest avalability date for each machine (t=0 at start)
+	vector<int> S(l); // Current machine/location per mask
+	vector<int> tMasque(l,0); // Earliest availability date per mask
+	vector<int> D(m,0); // Last job per machine (used to compute setup time) : 0 if none
 	for(int i=1;i<=l;i++)
 		S[i-1]=initMask[i-1];
-	for(int j=0;j<n;j++){//On parcourt l'individu
-		int jobact=individu.jobs[j];
-		int machact=individu.machines[j];
+	for(int j=0;j<n;j++){ // Browse the individual
+		int jobact=individual.jobs[j];
+		int machact=individual.machines[j];
 
 		vector<int> elt(2);
 		elt[0]=jobact;
 
-		//cout<<"Masque A"<<phi[jobact-1]<<", Job à la position "<<j+1<<" : job J"<<jobact<<" pour la machine M"<<machact<<" : "<<endl;
 		if(S[phi[jobact-1]-1]!=machact){
 			tMasque[phi[jobact-1]-1]++;
 			S[phi[jobact-1]-1] = machact;
@@ -137,17 +130,15 @@ vector<vector<vector<int> > > Instance::HeuristiqueMemetique(Individu individu/*
 		if(D[machact-1]!=0)
 			imQ=indexMachineQualif(D[machact-1],machact);
 		int Beta = (D[machact-1]==0)?0:setup[families[machact-1]-1][batch[D[machact-1]-1][imQ]-1][batch[jobact-1][indexMachineQualif(jobact,machact)]-1];
-		//formule
+		// Formula
 		int Debut =(tMasque[phi[jobact-1]-1] > tDispo[machact-1]+Beta)?tMasque[phi[jobact-1]-1]:tDispo[machact-1]+Beta;
 		int Fin = Debut + exec[jobact-1][indexMachineQualif(jobact,machact)];
 		elt[1]=Debut;
 		scheduleFinal[machact-1].push_back(elt);	
-		//On actualise toutes les infos
+		// Update
 		D[machact-1] = jobact;
 		tDispo[machact-1] = Fin;
 		tMasque[phi[jobact-1]-1] = Fin;
-		//La date de fin est conservée
-		/**completionTimes[j]=Fin;**/
 	}
 	return scheduleFinal;
 }
@@ -230,7 +221,7 @@ double Instance::evaluateSchedule(vector< vector< vector<int> > > schedule, int 
 
 
 //Calcul de la qualité de la solution (fitness)
-double Instance::fitnessMemetique(Individu individu, int fctObj, double r1, double r2, int r3, double l1, double l2, double l3, double epsilon){
+double Instance::fitnessMemetique(Individual individu, int fctObj, double r1, double r2, int r3, double l1, double l2, double l3, double epsilon){
 	if(fctObj==4){
 		double c1(fitnessMemetique(individu,1,r1,r2,r3,l1,l2,l3,epsilon));
 		double c2(fitnessMemetique(individu,2,r1,r2,r3,l1,l2,l3,epsilon));
@@ -301,17 +292,17 @@ double Instance::fitnessMemetique(Individu individu, int fctObj, double r1, doub
 }
 
 //Procédure de recherche locale.
-double Instance::rechercheLocaleMemetique(Individu &enfant, int nbiter, int p1, int p2, double T, int palier, double a, double r1, double r2, int r3, double l1, double l2, double l3, double epsilon){
+double Instance::rechercheLocaleMemetique(Individual &child, int nbiter, int p1, int p2, double T, int palier, double a, double r1, double r2, int r3, double l1, double l2, double l3, double epsilon){
 	//Variables pour quantifier l'utilité du test de voisinage significatif
-	int fctObj(enfant.fctObj);
+	int fctObj(child.fctObj);
 	double nbTentatives(0.0);
 	double delta(0.0);
 	double fit(0.0);
-	enfant.fitness=fitnessMemetique(enfant,fctObj,r1,r2,r3,l1,l2,l3,epsilon);
-	fit=enfant.fitness;
+	child.fitness=fitnessMemetique(child,fctObj,r1,r2,r3,l1,l2,l3,epsilon);
+	fit=child.fitness;
 	//Meilleure solution trouvée dans la recherche locale
-	Individu best(enfant);
-	//cout<<"Debut : "<<enfant<<endl;
+	Individual best(child);
+	//cout<<"Debut : "<<child<<endl;
 	for(int i=0;i<2*nbiter;i++){
 		//cout<<"     "<<fit<<endl;
 		//On crée un vecteur temporaire de Completion Times, initialisé au vecteur principal par constructeur de copie
@@ -321,10 +312,10 @@ double Instance::rechercheLocaleMemetique(Individu &enfant, int nbiter, int p1, 
 
 			/**
 			//Checkpoint
-			cout<<"INDIVIDU DE DEPART : "<<endl;
-			printVector(enfant[1]);
+			cout<<"Individual DE DEPART : "<<endl;
+			printVector(child[1]);
 			cout<<endl;
-			printVector(enfant[0]);
+			printVector(child[0]);
 			cout<<endl;
 			cout<<"Liste des dates de fin : "<<endl;
 			printVector(completionTimes);
@@ -332,21 +323,21 @@ double Instance::rechercheLocaleMemetique(Individu &enfant, int nbiter, int p1, 
 			///////////////////////////////////////////////////////////////
 			**/
 			int indiceChgt=rand()%n;
-			int indiceAncMach=enfant.machines[indiceChgt];
-			int indNouvMach=rand()%(corresp[enfant.jobs[indiceChgt]-1].size()); //La nouvelle machine doit etre qualifiée
-			enfant.machines[indiceChgt]=corresp[enfant.jobs[indiceChgt]-1][indNouvMach];
+			int indiceAncMach=child.machines[indiceChgt];
+			int indNouvMach=rand()%(corresp[child.jobs[indiceChgt]-1].size()); //La nouvelle machine doit etre qualifiée
+			child.machines[indiceChgt]=corresp[child.jobs[indiceChgt]-1][indNouvMach];
 
 			double fitact(0.0);
 			
-			fitact=fitnessMemetique(enfant,fctObj,r1,r2,r3,l1,l2,l3,epsilon);
+			fitact=fitnessMemetique(child,fctObj,r1,r2,r3,l1,l2,l3,epsilon);
 			/////////////////////////////////////////////////////////////////
 
 			/**
 			//Checkpoint
-			cout<<endl<<"........................"<<endl<<"INDIVIDU MODIFIE DONT LA MACHINE CHANGE EN POSITION "<<indiceChgt<<": "<<endl;
-			printVector(enfant[1]);
+			cout<<endl<<"........................"<<endl<<"Individual MODIFIE DONT LA MACHINE CHANGE EN POSITION "<<indiceChgt<<": "<<endl;
+			printVector(child[1]);
 			cout<<endl;
-			printVector(enfant[0]);
+			printVector(child[0]);
 			cout<<endl;
 			cout<<"Liste des dates de fin : "<<endl;
 			printVector(completionTimes);
@@ -359,20 +350,20 @@ double Instance::rechercheLocaleMemetique(Individu &enfant, int nbiter, int p1, 
 			delta=fitact-fit;
 			double pr = (double)(rand()/((double)(RAND_MAX)));
 			if(((fctObj==1 && delta<0) || (fctObj!=1 && delta>0)) /**/ && ( (fctObj==1 && pr>exp(delta/T)) || (fctObj!=1 && pr>exp(-delta/T)) ) /**/){//On n'améliore pas
-				enfant.machines[indiceChgt]=indiceAncMach;
+				child.machines[indiceChgt]=indiceAncMach;
 			}
 			else{ //On améliore, on actualise aussi les C_i
 				fit=fitact;
-				enfant.fitness=fitact;
+				child.fitness=fitact;
 			}
 		}
 		else if(p<p1+p2){ //Voisinage V2
 			/**
 			//Checkpoint
-			cout<<"INDIVIDU DE DEPART : "<<endl;
-			printVector(enfant[1]);
+			cout<<"Individual DE DEPART : "<<endl;
+			printVector(child[1]);
 			cout<<endl;
-			printVector(enfant[0]);
+			printVector(child[0]);
 			cout<<endl;
 			cout<<"Liste des dates de fin : "<<endl;
 			printVector(completionTimes);
@@ -389,9 +380,9 @@ double Instance::rechercheLocaleMemetique(Individu &enfant, int nbiter, int p1, 
 			//Utilisation d'une propriété
 			int indice1=indiceBoug-1;
 			int indice2=indiceBoug+1;	
-			while((indice1>=0)&&(enfant[0][indice1]!=enfant[0][indiceBoug] && phi[enfant[1][indice1]-1]!=phi[enfant[1][indiceBoug]-1]))
+			while((indice1>=0)&&(child[0][indice1]!=child[0][indiceBoug] && phi[child[1][indice1]-1]!=phi[child[1][indiceBoug]-1]))
 				indice1--;
-			while((indice2<n)&&(enfant[0][indice2]!=enfant[0][indiceBoug] && phi[enfant[1][indice2]-1]!=phi[enfant[1][indiceBoug]-1]))
+			while((indice2<n)&&(child[0][indice2]!=child[0][indiceBoug] && phi[child[1][indice2]-1]!=phi[child[1][indiceBoug]-1]))
 				indice2++;
 			ratioIntervalleInterdit+=100.0*(indice2-indice1+1)/n;
 			//Choix de l'indice de déplacement
@@ -408,31 +399,31 @@ double Instance::rechercheLocaleMemetique(Individu &enfant, int nbiter, int p1, 
 			}
 			**/
 			//On a l'indice, on effectue maintenant le déplacement
-			enfant.machines.insert(enfant.machines.begin()+indDep,enfant.machines[indiceBoug]);
-			enfant.jobs.insert(enfant.jobs.begin()+indDep,enfant.jobs[indiceBoug]);
+			child.machines.insert(child.machines.begin()+indDep,child.machines[indiceBoug]);
+			child.jobs.insert(child.jobs.begin()+indDep,child.jobs[indiceBoug]);
 			if(indDep<=indiceBoug)
 				indiceBoug++;
 			else
 				indDep--;
-			enfant.machines.erase(enfant.machines.begin()+indiceBoug);
-			enfant.jobs.erase(enfant.jobs.begin()+indiceBoug);
+			child.machines.erase(child.machines.begin()+indiceBoug);
+			child.jobs.erase(child.jobs.begin()+indiceBoug);
 
 			//On teste si le changement n'est pas améliorant
 			double fitact(0.0);
 			/**if(fctObj==2){
-				fitact=nouvelleFitness(enfant,tmpCompletion,min(aa,bb),fit);
+				fitact=nouvelleFitness(child,tmpCompletion,min(aa,bb),fit);
 			}
 			else**/
-			fitact=fitnessMemetique(enfant,fctObj,r1,r2,r3,l1,l2,l3,epsilon);
+			fitact=fitnessMemetique(child,fctObj,r1,r2,r3,l1,l2,l3,epsilon);
 			///////////////////////////////////////////////////////////////////////
 
 
 			/**
 			//Checkpoint
-			cout<<endl<<"........................"<<endl<<"INDIVIDU DONT ON A DEPLACE LA POSITION "<<aa<<" A LA POSITION "<<bb<<": "<<endl;
-			printVector(enfant[1]);
+			cout<<endl<<"........................"<<endl<<"Individual DONT ON A DEPLACE LA POSITION "<<aa<<" A LA POSITION "<<bb<<": "<<endl;
+			printVector(child[1]);
 			cout<<endl;
-			printVector(enfant[0]);
+			printVector(child[0]);
 			cout<<endl;
 			cout<<"Liste des dates de fin : "<<endl;
 			printVector(completionTimes);
@@ -446,27 +437,27 @@ double Instance::rechercheLocaleMemetique(Individu &enfant, int nbiter, int p1, 
 			delta=fitact-fit;
 /**...**/		double pr = (double)(rand()/((double)(RAND_MAX)));
 			if(((fctObj==1 && delta<0) || (fctObj!=1 && delta>0)) /**/ && ((fctObj==1 && pr>exp(delta/T)) || (fctObj!=1 && pr>exp(-delta/T))) /**/){//On n'améliore pas. On revient à la solution d'origine
-				enfant.machines.insert(enfant.machines.begin()+indiceBoug,enfant.machines[indDep]);
-				enfant.jobs.insert(enfant.jobs.begin()+indiceBoug,enfant.jobs[indDep]);
+				child.machines.insert(child.machines.begin()+indiceBoug,child.machines[indDep]);
+				child.jobs.insert(child.jobs.begin()+indiceBoug,child.jobs[indDep]);
 				if(indDep>indiceBoug)
 					indDep++;
-				enfant.machines.erase(enfant.machines.begin()+indDep);
-				enfant.jobs.erase(enfant.jobs.begin()+indDep);
-				enfant.fitness=fit;
+				child.machines.erase(child.machines.begin()+indDep);
+				child.jobs.erase(child.jobs.begin()+indDep);
+				child.fitness=fit;
 			}
 			else{ //On améliore, on actualise aussi les C_i
 				fit=fitact;
-				enfant.fitness=fitact;
+				child.fitness=fitact;
 			}
 		}
 		else{ //Voisinage V3
 
 			/**
 			//Checkpoint
-			cout<<"INDIVIDU DE DEPART : "<<endl;
-			printVector(enfant[1]);
+			cout<<"Individual DE DEPART : "<<endl;
+			printVector(child[1]);
 			cout<<endl;
-			printVector(enfant[0]);
+			printVector(child[0]);
 			cout<<endl;
 			cout<<"Liste des dates de fin : "<<endl;
 			printVector(completionTimes);
@@ -477,21 +468,21 @@ double Instance::rechercheLocaleMemetique(Individu &enfant, int nbiter, int p1, 
 			int indiceBoug=rand()%n;
 			int indDep=rand()%n;
 			//On a l'indice, on effectue maintenant l'échange
-			swap(enfant.machines[indiceBoug],enfant.machines[indDep]);
-			swap(enfant.jobs[indiceBoug],enfant.jobs[indDep]);
+			swap(child.machines[indiceBoug],child.machines[indDep]);
+			swap(child.jobs[indiceBoug],child.jobs[indDep]);
 			//On teste si le changement n'est pas améliorant
 			double fitact(0.0);
 			/**if(fctObj==2){
-				fitact=nouvelleFitness(enfant,tmpCompletion,min(indiceBoug,indDep),fit);
+				fitact=nouvelleFitness(child,tmpCompletion,min(indiceBoug,indDep),fit);
 			}
 			else**/
-			fitact=fitnessMemetique(enfant,fctObj,r1,r2,r3,l1,l2,l3,epsilon);
+			fitact=fitnessMemetique(child,fctObj,r1,r2,r3,l1,l2,l3,epsilon);
 			/**
 			//Checkpoint
-			cout<<endl<<"........................"<<endl<<"INDIVIDU DONT ON A ECHANGE LES POSITIONS "<<indiceBoug<<" ET "<<indDep<<": "<<endl;
-			printVector(enfant[1]);
+			cout<<endl<<"........................"<<endl<<"Individual DONT ON A ECHANGE LES POSITIONS "<<indiceBoug<<" ET "<<indDep<<": "<<endl;
+			printVector(child[1]);
 			cout<<endl;
-			printVector(enfant[0]);
+			printVector(child[0]);
 			cout<<endl;
 			cout<<"Liste des dates de fin : "<<endl;
 			printVector(completionTimes);
@@ -504,27 +495,27 @@ double Instance::rechercheLocaleMemetique(Individu &enfant, int nbiter, int p1, 
 			delta=fitact-fit;
 			double pr=(double)(rand()/((double)(RAND_MAX)));
 			if(((fctObj==1 && delta<0) || (fctObj!=1 && delta>0)) /**/ && ((fctObj==1 && pr>exp(delta/T)) || (fctObj!=1 && pr>exp(-delta/T))) /**/){//On n'améliore pas. On revient à la solution d'origine
-				swap(enfant.machines[indiceBoug],enfant.machines[indDep]);
-				swap(enfant.jobs[indiceBoug],enfant.jobs[indDep]);
-				enfant.fitness=fit;
+				swap(child.machines[indiceBoug],child.machines[indDep]);
+				swap(child.jobs[indiceBoug],child.jobs[indDep]);
+				child.fitness=fit;
 			}
 			else{ //On améliore, on actualise aussi les C_i
 				fit=fitact;
-				enfant.fitness=fitact;
+				child.fitness=fitact;
 			}
 		}
 		if(i%palier==0) T=T*a; //actualisation de la température
 		//On actualise la meilleure solution trouvée dans la recherche locale			
-		if(enfant>best){
-			best=enfant;
+		if(child>best){
+			best=child;
 		}
 	}
-	enfant=best;
+	child=best;
 	return best.fitness;
 }
 
 //Recuit simulé
-double Instance::recuitSimule(Individu &i1, int nbIter, int conv, int stagnation, double tauxRedemarrage, int p1, int p2, double T, int palier, double a, double r1, double r2, int r3, double l1, double l2, double l3, double epsilon){
+double Instance::recuitSimule(Individual &i1, int nbIter, int conv, int stagnation, double tauxRedemarrage, int p1, int p2, double T, int palier, double a, double r1, double r2, int r3, double l1, double l2, double l3, double epsilon){
 	int fctObj(i1.fctObj);
 	double Tredemarrage(T/10.0);
 	i1.fitness=fitnessMemetique(i1,fctObj,r1,r2,r3,l1,l2,l3,epsilon);
@@ -533,7 +524,7 @@ double Instance::recuitSimule(Individu &i1, int nbIter, int conv, int stagnation
 	int nbSansAm(0);
 	int meilleureSansAm(0);
 	//Meilleure solution trouvée dans la recherche locale
-	Individu best(i1);
+	Individual best(i1);
 	//cout<<"Solution de départ : "<<fit<<endl;
 	for(int i=0;i<nbIter;i++){
 		int p=rand()%100;
@@ -658,10 +649,10 @@ vector<vector<vector<int> > > Instance::POPMemetique(int Npop, int nbIter, int c
 
 	int iterLoc=nbIter;
 
-	priority_queue<Individu> population;
-	vector<Individu> pop;
+	priority_queue<Individual> population;
+	vector<Individual> pop;
 	for(int i=0;i<Npop;i++){
-		Individu i1(fctObj,n,corresp);
+		Individual i1(fctObj,n,corresp);
 		//rechercheLocaleMemetique(i1,iterLoc,p1,p2,T,palier,a,r1,r2,r3,l1,l2,l3);
 		recuitSimule(i1,iterLoc,conv,stagnation,tauxRedemarrage,p1,p2,T,palier,a,r1,r2,r3,l1,l2,l3,epsilon);
 		pop.push_back(i1);
@@ -669,7 +660,7 @@ vector<vector<vector<int> > > Instance::POPMemetique(int Npop, int nbIter, int c
 	for(int i=0;i<Npop;i++)
 		population.push(pop[i]);
 
-	Individu bestSol(population.top());
+	Individual bestSol(population.top());
 
 	int nIt(0);
 	//Il faut avoir une gestion de la bestSol depuis la dernière réinitialisation pour ne pas réinitialiser et re-converger bêtement juste parce qu'on n'a pas encore modifié la bestSol; on appelle la variable bestCourant;
@@ -681,9 +672,9 @@ vector<vector<vector<int> > > Instance::POPMemetique(int Npop, int nbIter, int c
 		//Petite procédure d'affichage		
 		if(nIt%20 == 0)
 			cout<<"Cout de la meilleure solution depuis : "<<endl<<"le debut\t(la derniere reinitialisation)"<<endl;
-		priority_queue<Individu> enfants;
-		priority_queue<Individu> temp;
-		vector<Individu> enf;
+		priority_queue<Individual> childs;
+		priority_queue<Individual> temp;
+		vector<Individual> enf;
 
 		//Sélection puis Croisement pour former les Npop*Rep individus de la génération suivante
 		for(int j=0;j<Desc;j++){
@@ -706,16 +697,16 @@ vector<vector<vector<int> > > Instance::POPMemetique(int Npop, int nbIter, int c
 				}
 			}
 			//selec2 est l'indice du second parent sélectionné par K-Tournoi
-			//On effectue un croisement (crossover) pour former un enfant
-			enf.push_back(CroisementMemetique(pop[selec1],pop[selec2]));
+			//On effectue un croisement (crossover) pour former un child
+			enf.push_back(crossoverMemetic(pop[selec1],pop[selec2]));
 			//rechercheLocaleMemetique(enf[j],iterLoc,p1,p2,T,palier,a,r1,r2,r3,l1,l2,l3);
 			recuitSimule(enf[j],iterLoc,conv,stagnation,tauxRedemarrage,p1,p2,T,palier,a,r1,r2,r3,l1,l2,l3,epsilon);
-			enfants.push(enf[j]);
+			childs.push(enf[j]);
 		}
 		if(Desc!=0){
-			for(int j=0;j<Surv;j++){ //On chope les Surv meilleurs enfants
-				temp.push(enfants.top());
-				enfants.pop();
+			for(int j=0;j<Surv;j++){ //On chope les Surv meilleurs childs
+				temp.push(childs.top());
+				childs.pop();
 			}
 			for(int j=0;j<Npop-Surv;j++){ //On chope les Npop-Surv meilleurs parents
 				temp.push(population.top());
@@ -774,7 +765,7 @@ vector<vector<vector<int> > > Instance::POPMemetique(int Npop, int nbIter, int c
 			pop[0]=bestSol; //--> On garde ou pas la bestSol dans la population réinitialisée?
 			population.push(pop[0]);
 			for(int ii=1;ii<Npop;ii++){
-				Individu i1(fctObj,n,corresp);
+				Individual i1(fctObj,n,corresp);
 				//rechercheLocaleMemetique(i1,iterLoc,p1,p2,T,palier,a,r1,r2,r3,l1,l2,l3);
 				recuitSimule(i1,iterLoc,conv,stagnation,tauxRedemarrage,p1,p2,T,palier,a,r1,r2,r3,l1,l2,l3,epsilon);
 				pop[ii]=i1;

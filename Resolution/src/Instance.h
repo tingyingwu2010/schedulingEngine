@@ -4,7 +4,7 @@
 #include<cstdio>
 #include<vector>
 #include<string>
-#include"Individu.h"
+#include"Individual.h"
 
 #define MAXPLAQUETTE 25 
 
@@ -75,25 +75,25 @@ class Instance{
 	double getBound2(); // Gets best lower bound for the second criterion
 
 	// Setters
-	void modifierHorizon(int nH); //Modifie l'horizon de temps H en lui donnant la valeur nH
+	void modifyHorizon(int nH); // Sets horizon H to a new value
 	void setBound(int obj, double val); // Updates the best bound on given objective 
 
 	// Solver methods
 	
 	// Metaheuristics	
-	std::vector< std::vector<std::vector<int> > > POPMemetique(int Npop, int nbIter, int conv, int stagnation, double tauxRedemarrage, int fctObj, int Ktour, double Rep, double Ts, int ReinIter, int nbIterSA, int p1, int p2, double T, int palier, double a, double r1, double r2, int r3, double l1, double l2, double l3, unsigned int duree, double epsilon); 
+	std::vector< std::vector<std::vector<int> > > POPMemetique(int Npop, int nbIter, int conv, int stagnation, double resetRatio, int fctObj, int Ktour, double Rep, double Ts, int ReinIter, int nbIterSA, int p1, int p2, double T, int palier, double a, double r1, double r2, int r3, double l1, double l2, double l3, unsigned int duree, double epsilon); 
 						//Algorithme memetique avec operations sur la sequence de lots affectes aux machines; 
 						//parametres : Npop, taille de la population; fctObj, objectif de l'optimisation(1->moves, 2->ciCI, 
 						//3->masques), Ktour est le nombre de parents selectionnes pour le tournoi de la selection, Rep est 
 						//le taux de reproduction de la generation, soit le pourcentage de la population que represente la 
 						//descendance, Ts est le taux de survivants de la nouvelle generation, ReinIter le nombre d'iterations sans ameliorations avant de reinitialiser la population et nbIterSA le nombre d'iterations sans ameliorations avant d'arreter, p1 et p2 les probabilites d'utilisation respectives des voisinages V1 et V2 dans la recherche locale, T est la temperature dans le recuit simule, palier est le nombre d'iterations sans diminuer la temperature T, a est le coefficient par lequel on multiplie T, les coordonnees r1, r2 et r3 sont celles du point du reference, et l1, l2 et l3 sont les coefficients. Enfin, on borne la durée de résolution en secondes et la valeur epsilon correspond au coefficient du terme de compensation dans la fonction d'agregation utilisée
-	double fitnessMemetique(Individu individu, int fctObj, double r1, double r2, int r3, double l1, double l2, double l3, double epsilon); //Calcule l'évaluation (ou fitness) d'un individu dans l'algorithme mémétique
-	Individu CroisementMemetique(Individu parent1, Individu parent2); //Croisement des parents parent1 et parent2
-	double rechercheLocaleMemetique(Individu &enfant, int nbiter, int p1, int p2, double T, int palier, double a, double r1, double r2, int r3, double l1, double l2, double l3, double epsilon);//Lance un algorithme de recherche locale sur un individu/enfant
-	std::vector<std::vector<std::vector<int> > > HeuristiqueMemetique(Individu individu); //Complète un individu du mémétique en une solution
+	double fitnessMemetique(Individual individual, int fctObj, double r1, double r2, int r3, double l1, double l2, double l3, double epsilon); //Calcule l'évaluation (ou fitness) d'un Individual dans l'algorithme mémétique
+	Individual crossoverMemetic(Individual parent1, Individual parent2); //Crossover parents parent1 and parent2
+	double rechercheLocaleMemetique(Individual &enfant, int nbiter, int p1, int p2, double T, int palier, double a, double r1, double r2, int r3, double l1, double l2, double l3, double epsilon);//Lance un algorithme de recherche locale sur un individu/enfant
+	std::vector<std::vector<std::vector<int> > > HeuristiqueMemetique(Individual individu); //Complète un Individual du mémétique en une solution
 	double nouvelleFitness(std::vector<std::vector<unsigned int> > &enfant, std::vector<unsigned int> &completionTimes, int indice, double fitness); //Calcule la nouvelle fitness dans la recherche locale, en économisant quelques calculs
 	double evaluateSchedule(std::vector< std::vector< std::vector<int> > > schedule, int fct, double r1, double r2, int r3, double l1, double l2, double l3, double epsilon); // Given a criterion, evaluate the schedule
-	double recuitSimule(Individu &i1, int nbIter, int conv, int stagnation, double tauxRedemarrage, int p1, int p2, double T, int palier, double a, double r1, double r2, int r3, double l1, double l2, double l3, double epsilon); //Recuit simulé
+	double recuitSimule(Individual &i1, int nbIter, int conv, int stagnation, double tauxRedemarrage, int p1, int p2, double T, int palier, double a, double r1, double r2, int r3, double l1, double l2, double l3, double epsilon); //Recuit simulé
 
 	// Linear Programming
 	int ecrirePLNE(unsigned int fctObj, unsigned int T); //Ecrit le PLNE dans le dossier FichiersPL
@@ -119,8 +119,8 @@ class Instance{
 
 	//Methode tricritere pour la garantie de faible Pareto-optimalite
 	std::vector<std::vector<std::vector<std::vector<int> > > > tricritere(double r1, double r2, double l1, double l2, int ecart, int nbiter, int p1, double T, int palier, double a); //(l1,l2) est le jeu de poids, (r1,r2) le point de reference, ecart est l'ecart maximal par rapport a l'optimum pour le troisieme critere, les autres parametres sont ceux de la recherche locale recuit simule
-	Individu creerIndividuInitial(std::vector<std::vector<std::vector<int > > > ordo); //Crée un individu à partir de ordo. Correspond à la fonction réciproque du codage mémétique qui à un individu associe une solution
-	double rechercheLocaleTricritere(Individu individu, int nbiter, int p1, double T, int palier, double a, double r1, double r2, double l1, double l2); //Algorithme de recherche locale qui ne dégrade jamais le nombre de déplacements de masques
+	Individual creerIndividuInitial(std::vector<std::vector<std::vector<int > > > ordo); //Crée un Individual à partir de ordo. Correspond à la fonction réciproque du codage mémétique qui à un Individual associe une solution
+	double rechercheLocaleTricritere(Individual individual, int nbiter, int p1, double T, int palier, double a, double r1, double r2, double l1, double l2); //Algorithme de recherche locale qui ne dégrade jamais le nombre de déplacements de masques
 
 	int ecrirePLNEmasques(int borninf); //Crée un PLNE pour le critère 3 avec borne inf imposée
 };

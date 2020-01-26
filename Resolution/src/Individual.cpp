@@ -1,35 +1,34 @@
 #include<iostream>
 #include<cstdlib>
 #include<vector>
-#include"Individu.h"
+#include"Individual.h"
 
 using namespace std;
 
-//Ecrire un individu
-ostream& operator<<(ostream &out, Individu const& i1){
+// Write an individual
+ostream& operator<<(ostream &out, Individual const& i1){
 	for(unsigned int i=0;i<i1.jobs.size();i++)
 		out<<"("<<i1.jobs[i]<<","<<i1.machines[i]<<") ";
 	out<<endl<<"Cout : "<<i1.fitness<<endl;
 	return out;
 }
 
-//Comparaison
-bool operator<(Individu const& i1, Individu const& i2){
-	return (i1.fctObj==1 && i1.fitness<i2.fitness) || (i1.fctObj!=1 && i1.fitness>i2.fitness);
+// Comparaison
+bool operator<(Individual const& i1, Individual const& i2){
+	return (i1.fctObj == 1 && i1.fitness < i2.fitness) || (i1.fctObj != 1 && i1.fitness > i2.fitness);
 }
 
-//Comparaison
-bool operator>(Individu const& i1, Individu const& i2){
-	return (i1.fctObj==1 && i1.fitness>i2.fitness) || (i1.fctObj!=1 && i1.fitness<i2.fitness);
+// Comparison
+bool operator>(Individual const& i1, Individual const& i2){
+	return (i1.fctObj == 1 && i1.fitness > i2.fitness) || (i1.fctObj != 1 && i1.fitness < i2.fitness);
 }
 
-Individu::Individu(int n){
+Individual::Individual(int n){
 	machines.resize(n);
 	jobs.resize(n);
 }
 
-//Constructeur
-Individu::Individu(unsigned int obj, int n, vector<vector<int> > corresp) : fitness(0), fctObj(obj) {
+Individual::Individual(unsigned int obj, int n, vector<vector<int> > corresp) : fitness(0), fctObj(obj) {
 	machines.resize(n);
 	jobs.resize(n);
 	vector<int> nb(n);
