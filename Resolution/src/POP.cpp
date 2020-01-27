@@ -148,7 +148,7 @@ void POP::bigMConstraints(SCIP_CONS *Cte, vector< vector<int> > invCorresp){
 				nbterm += invCorresp[indexMachine-1].size() - 1;
 				// Then add number of elements of E_phi_i minus those of M_j(phi_i)
 				for(int nb=0;nb<K->jobsCount();nb++)
-					if(K->getPhi()[nb] == K->getPhi()[i-1] && !K->estQualifiee(nb+1,indexMachine))
+					if(K->getPhi()[nb] == K->getPhi()[i-1] && !K->isQualified(nb+1,indexMachine))
 						nbterm++;
 				// M uijt + sum of uiojoto <= M
 				namebuff.str(""); namebuff <<"Big_" <<i<<"_"<<j<<"_"<<t;
@@ -490,7 +490,7 @@ void POP::create_ILPMO(){
 				nbterm += invCorresp[indexMachine-1].size() - 1;
 				//Puis on rajoute le nombre d'elements de E_phi_i moins ceux de M_j(phi_i)
 				for(int nomb = 0;nomb<K->jobsCount();nomb++)
-					if(K->getPhi()[nomb] == K->getPhi()[i-1] && !K->estQualifiee(nomb+1,indexMachine))
+					if(K->getPhi()[nomb] == K->getPhi()[i-1] && !K->isQualified(nomb+1,indexMachine))
 						nbterm++;
 	
        // M uijt + somme des uiojoto <= M

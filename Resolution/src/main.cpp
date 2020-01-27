@@ -88,11 +88,11 @@ int main(int argc, char **argv){
 			cout<<"."<<endl;
 			cout<<"Population size is "<<Npop<<"."<<endl;
 
-			clock_t ti,tf;
+			clock_t ti, tf;
 			ti = clock();
 			
 			int K(Npop/3);
-			vector< vector<vector<int> > > schedule = instance.POPMemetique(Npop, nbIter, conv, stagnation, resetRatio, fctObj, K, Rep, Ts, ReinIter, nbIterSA, p1, p2, temperature, step, a, 0, 0, 0, 0, 0, 0, 120, 0);
+			vector< vector<vector<int> > > schedule = instance.POPMemetic(Npop, nbIter, conv, stagnation, resetRatio, fctObj, K, Rep, Ts, ReinIter, nbIterSA, p1, p2, temperature, step, a, 0, 0, 0, 0, 0, 0, 120, 0);
 			
 			tf=clock();
 			instance.evaluateSchedule(schedule,fctObj,0,0,0,0,0,0,0);
@@ -107,14 +107,14 @@ int main(int argc, char **argv){
 
 			cout<<"Solution found in "<<(tf-ti)*1e-6<<" seconds."<<endl;
 	
-			if(fctObj == 1 && (instance.getMSol1() == -1 || cc > instance.getMSol1()))
+			if(fctObj == 1 && (instance.getBestSol1() == -1 || cc > instance.getBestSol1()))
 				instance.writeBestKnownSolution(fctObj, cc, schedule);
-			if(fctObj==2 && (instance.getMSol2() == -1 || cc < instance.getMSol2()))
+			if(fctObj==2 && (instance.getBestSol2() == -1 || cc < instance.getBestSol2()))
 					instance.writeBestKnownSolution(fctObj, cc, schedule);
-			if(fctObj==3 && (instance.getMSol3() == -1 || cc < instance.getMSol3()))
+			if(fctObj==3 && (instance.getBestSol3() == -1 || cc < instance.getBestSol3()))
 				instance.writeBestKnownSolution(fctObj, cc, schedule);
 		}
-		else if(c=='e'){
+		else if(c == 'e'){
 			cout<<"Please enter: "<<endl<<endl;
 			cout<<askObjectiveFunction;
 			unsigned int fctObj, T;
@@ -150,7 +150,7 @@ int main(int argc, char **argv){
 				double cc = instance.getCost(fctObj);
 				cout<<endl<<endl<<"Solution cost: "<<cc<<endl<<endl<<endl;
 				instance.visualization(schedule, fctObj, 1);
-				if(instance.getMSol3() == -1 || cc < instance.getMSol3())
+				if(instance.getBestSol3() == -1 || cc < instance.getBestSol3())
 					instance.writeBestKnownSolution(fctObj, cc, schedule);		
 			}
 			else{ //fctObj = 1 or 2
@@ -169,9 +169,9 @@ int main(int argc, char **argv){
 					double cc = instance.getCost(fctObj);
 					cout<<endl<<endl<<"Solution cost: "<<cc<<endl<<endl<<endl;
 					instance.visualization(schedule, fctObj, 1);
-					if(fctObj == 1 && (instance.getMSol1() == -1 || cc > instance.getMSol1()))
+					if(fctObj == 1 && (instance.getBestSol1() == -1 || cc > instance.getBestSol1()))
 						instance.writeBestKnownSolution(fctObj, cc, schedule);
-					if(fctObj == 2 && (instance.getMSol2() == -1 || cc < instance.getMSol2()))
+					if(fctObj == 2 && (instance.getBestSol2() == -1 || cc < instance.getBestSol2()))
 						instance.writeBestKnownSolution(fctObj, cc, schedule);
 				}
 				else
@@ -189,7 +189,7 @@ int main(int argc, char **argv){
 			double r1,r2,r3;
 			r1=(instance.getBound1()==-1)?(instance.nombrePlaquettes()):(instance.getBound1());
 			r2=(instance.getBound2()==-1)?(instance.minorantCritere2()):(instance.getBound2());
-			r3=instance.getMSol3();
+			r3=instance.getBestSol3();
 			
 			// Compute anti-ideal point
 			double nadir1(instance.calculAntiIdeal3D(1));
@@ -232,7 +232,7 @@ int main(int argc, char **argv){
 					cout<<"Weights: ("<<l1<<" , "<<ll2<<" , "<<ll3<<")."<<endl<<endl;
 					clock_t ti,tf;
 					ti = clock();
-					vector< vector<vector<int> > > schedule = instance.POPMemetique(Npop, nbIter, conv, stagnation, resetRatio, 4, Ktour, Rep, Ts, ReinIter, nbIterSA, p1, p2, temperature, step, a, r1, r2, r3, l1, ll2, ll3, duration, epsilon);
+					vector< vector<vector<int> > > schedule = instance.POPMemetic(Npop, nbIter, conv, stagnation, resetRatio, 4, Ktour, Rep, Ts, ReinIter, nbIterSA, p1, p2, temperature, step, a, r1, r2, r3, l1, ll2, ll3, duration, epsilon);
 					tf=clock();
 					double cc(instance.evaluateSchedule(schedule,4, r1, r2, r3, l1, ll2, ll3, epsilon));
 					double c1(instance.evaluateSchedule(schedule,1, 0, 0, 0, 0, 0, 0, epsilon));
@@ -241,11 +241,11 @@ int main(int argc, char **argv){
 					cout<<endl<<endl;
 					cout<<"The solution has cost "<<cc<<" ( "<<c1<<" , "<<c2<<" , "<<c3<<" ) "<<endl<<endl;
 					cout<<"Solution found in "<<(tf-ti)*1e-6<<" seconds."<<endl;
-					if((instance.getMSol1() == -1) || (c1>instance.getMSol1()))
+					if((instance.getBestSol1() == -1) || (c1>instance.getBestSol1()))
 						instance.writeBestKnownSolution(1,c1,schedule);
-					if((instance.getMSol2() == -1) || (c2<instance.getMSol2()))
+					if((instance.getBestSol2() == -1) || (c2<instance.getBestSol2()))
 						instance.writeBestKnownSolution(2,c2,schedule);
-					if((instance.getMSol3() == -1) || (c3<instance.getMSol3()))
+					if((instance.getBestSol3() == -1) || (c3<instance.getBestSol3()))
 						instance.writeBestKnownSolution(3,c3,schedule);
 					if(coeff1<1.0)
 						coeff1+=0.2;
@@ -268,7 +268,7 @@ int main(int argc, char **argv){
 			double cc = instance.getCost(3);
 			cout<<endl<<endl<<"The number of mask moves is "<<cc<<endl<<endl<<endl;
 			instance.visualization(schedule,3,3);
-			if((instance.getMSol3() == -1) || (cc < instance.getMSol3()))
+			if((instance.getBestSol3() == -1) || (cc < instance.getBestSol3()))
 				instance.writeBestKnownSolution(3, cc, schedule);
 		}
 		else if(c=='b'){
@@ -336,9 +336,9 @@ int main(int argc, char **argv){
 					coefficientL2+=0.02;
 				else
 					coefficientL2+=2.0;
-				if((instance.getMSol1() == -1) || (cc1>instance.getMSol1()))
+				if((instance.getBestSol1() == -1) || (cc1>instance.getBestSol1()))
 					instance.writeBestKnownSolution(1,cc1,schedule);
-				if((instance.getMSol2() == -1) || (cc2<instance.getMSol2()))
+				if((instance.getBestSol2() == -1) || (cc2<instance.getBestSol2()))
 					instance.writeBestKnownSolution(2,cc2,schedule);
 			}
 			outputPareto.close();
@@ -386,7 +386,7 @@ int main(int argc, char **argv){
 				cout<<"Anti-ideal point approximation: ("<<nadir1<<" , "<<nadir2<<")."<<endl;
 				cout<<"Weights: ("<<l1<<" , "<<ll2<<")."<<endl<<endl;
 				int Ktour(Npop/3);
-				vector< vector<vector<int> > > schedule = instance.POPMemetique(Npop, nbIter, conv, stagnation, resetRatio, 4, Ktour, Rep, Ts, ReinIter, nbIterSA, p1, p2, temperature, step, a, r1, r2, 0, l1, ll2, 0, duration, epsilon);	
+				vector< vector<vector<int> > > schedule = instance.POPMemetic(Npop, nbIter, conv, stagnation, resetRatio, 4, Ktour, Rep, Ts, ReinIter, nbIterSA, p1, p2, temperature, step, a, r1, r2, 0, l1, ll2, 0, duration, epsilon);	
 				cout<<endl<<endl<<"Reference point: ("<<r1<<" , "<<r2<<")"<<endl<<endl;
 				instance.printScheduleToConsole(schedule);
 				instance.evaluateSchedule(schedule,1,0,0,0,0,0,0,epsilon);
@@ -399,9 +399,9 @@ int main(int argc, char **argv){
 					coefficientL2+=0.02;
 				else
 					coefficientL2+=2.0;
-				if((instance.getMSol1() == -1) || (cc1>instance.getMSol1()))
+				if((instance.getBestSol1() == -1) || (cc1>instance.getBestSol1()))
 					instance.writeBestKnownSolution(1,cc1,schedule);
-				if((instance.getMSol2() == -1) || (cc2<instance.getMSol2()))
+				if((instance.getBestSol2() == -1) || (cc2<instance.getBestSol2()))
 					instance.writeBestKnownSolution(2,cc2,schedule);
 			}
 			outputPareto.close();

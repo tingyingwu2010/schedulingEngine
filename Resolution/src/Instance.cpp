@@ -271,12 +271,12 @@ Instance::Instance(string name){
 
 	// Colour initialization: HSV mode
 	colors.resize(l);
-	float sumtmp = 0;											
+	float sumTmp = 0;											
 	for(int i=0;i<l;i++){
 		colors[i].resize(3);
 		int alea = rand(); // TODO: We want to avoid too similar colors
-		sumtmp += alea;
-		colors[i][0] = (float) (sumtmp/INT_MAX);
+		sumTmp += alea;
+		colors[i][0] = (float) (sumTmp/INT_MAX);
 		colors[i][1] = (float) (rand())/RAND_MAX; // For saturation
 		colors[i][2] = 0.25 + (float) (rand())/RAND_MAX; // Avoid too dark colors
 	}
@@ -290,21 +290,11 @@ double Instance::getBound2(){
 	return bestBound2;
 }
 
-bool Instance::estQualifiee(int i, int j){
-	bool estq = false;
-	for(unsigned int k=0;k<corresp[i-1].size();k++){
-		if(corresp[i-1][k]==j)
-			estq=true;
-	}
-	return estq;
-}
-
-bool Instance::estTrainQualifiee(vector<int> train, int j){
-	bool estq = true;
-	for(unsigned int i=0;i<train.size();i++){
-		estq = estq && estQualifiee(train[i],j);
-	}
-	return estq;
+bool Instance::isQualified(int job, int machine){
+	bool result = false;
+	for(unsigned int k=0;k<corresp[job-1].size();k++)
+		result = result || (corresp[job-1][k] == machine);
+	return result;
 }
 
 unsigned int Instance::indexMachineQualif(int job, int machine){ 
@@ -317,11 +307,10 @@ unsigned int Instance::indexMachineQualif(int job, int machine){
 bool Instance::estBatchCompatible(vector<int> train ,int batchMachine, int j){
 	bool comp = true;
 	for(unsigned int i=1;i<train.size();i++){
-		if(batch[train[i]-1][indexMachineQualif(train[i],j)]!=batch[train[i-1]-1][indexMachineQualif(train[i-1],j)]){
-			comp=false;
-		}
+		if(batch[train[i]-1][indexMachineQualif(train[i],j)]!=batch[train[i-1]-1][indexMachineQualif(train[i-1],j)])
+			comp = false;
 	}
-	return (comp && ((batchMachine==0) || (batch[train[0]-1][indexMachineQualif(train[0],j)]==batchMachine)));
+	return (comp && ((batchMachine==0) || (batch[train[0]-1][indexMachineQualif(train[0],j)] == batchMachine)));
 }
 
 int Instance::nombreMachines(){
@@ -389,15 +378,15 @@ string Instance::getInstanceName(){
 	return instanceName;
 }
 
-double Instance::getMSol1(){
+double Instance::getBestSol1(){
 	return bestKnownSol1;
 }
 
-double Instance::getMSol2(){
+double Instance::getBestSol2(){
 	return bestKnownSol2;
 }
 
-double Instance::getMSol3(){
+double Instance::getBestSol3(){
 	return bestKnownSol3;
 }
 
@@ -416,11 +405,11 @@ void Instance::writeBestKnownSolution(int fctObj, double cc, vector< vector<vect
 	}
 	fm.close();
 	switch(fctObj){
-		case 1: bestKnownSol1=cc;
+		case 1: bestKnownSol1 = cc;
 			break;
-		case 2: bestKnownSol2=cc;
+		case 2: bestKnownSol2 = cc;
 			break;
-		case 3: bestKnownSol3=cc;
+		case 3: bestKnownSol3 = cc;
 			break;
 	}
 }
