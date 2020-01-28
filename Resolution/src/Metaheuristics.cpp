@@ -52,7 +52,7 @@ Individual Instance::crossoverMemetic(Individual parent1, Individual parent2){
 	return child;
 }
 
-double Instance::nouvelleFitness(vector<vector<unsigned int> > &child, vector<unsigned int> &completionTimes, int indice, double fitness){	
+double Instance::newFitness(vector<vector<unsigned int> > &child, vector<unsigned int> &completionTimes, int indice, double fitness){	
 	vector<int> tAvail(m,0); // Earliest availability date per machine (t=0 at start)
 	vector<int> D(m,0); // Last job per machine (used to compute setup times), 0 if none
 	for(int j=0;j<m;j++){

@@ -13,12 +13,10 @@ ostream& operator<<(ostream &out, Individual const& i1){
 	return out;
 }
 
-// Comparaison
 bool operator<(Individual const& i1, Individual const& i2){
 	return (i1.fctObj == 1 && i1.fitness < i2.fitness) || (i1.fctObj != 1 && i1.fitness > i2.fitness);
 }
 
-// Comparison
 bool operator>(Individual const& i1, Individual const& i2){
 	return (i1.fctObj == 1 && i1.fitness > i2.fitness) || (i1.fctObj != 1 && i1.fitness < i2.fitness);
 }
@@ -34,15 +32,13 @@ Individual::Individual(unsigned int obj, int n, vector<vector<int> > corresp) : 
 	vector<int> nb(n);
 	for(int i=0;i<n;i++)
 		nb[i]=i+1;
-	//On tire au hasard la permutation des jobs puis pour chaque job, on tire sa machine au hasard parmi son ensemble de machines qualifiées
+	//Randomly picking a permutation of jobs, then picking a qualified machine for each
 	for(int i=0;i<n;i++){
-		int h=rand()%nb.size();
-		jobs[i]=nb[h];
-		machines[i]=corresp[nb[h]-1][rand()%(corresp[nb[h]-1].size())]; //Un indice de machine au hasard dans corresp[nb[h]-1]
+		int h = rand()%nb.size();
+		jobs[i] = nb[h];
+		machines[i] = corresp[nb[h]-1][rand()%(corresp[nb[h]-1].size())]; // Random index in corresp[nb[h]-1]
 		nb.erase(nb.begin()+h);
 	}
 }
-
-
 
 

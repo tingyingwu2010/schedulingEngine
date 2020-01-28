@@ -17,8 +17,8 @@ void Instance::setBound(int obj, double val){
 		bestBound2 = val;
 }
 
-int Instance::nombrePlaquettes(){
-	int nb=0;
+int Instance::numberWafers(){
+	int nb = 0;
 	for(int i=0;i<n;i++)
 		nb+=w[i];
 	return nb;
@@ -32,25 +32,25 @@ int Instance::member(vector<int> tab, int j){
 	return ind;
 }
 
-void Instance::afficheTemps(){
+void Instance::displayTime(){
 	cout<<"Running time "<<endl;
 	for(int i=1;i<=n;i++){
 		for(int j=1;j<=m;j++){
-			int memb=-1;
+			int memb = -1;
 			for(unsigned int k=1;k<=corresp[i-1].size();k++)
-				if(corresp[i-1][k-1]==j)
-					memb=k-1;
+				if(corresp[i-1][k-1] == j)
+					memb = k-1;
 			if(memb!=-1)
 				cout<<" "<<exec[i-1][memb]<<" ";
 			else
 				cout<<"   ";
 		}
-	cout<<endl;
+		cout<<endl;
 	}
 }
 
 void Instance::modifyHorizon(int nH){
-	H=nH;
+	H = nH;
 }
 
 Instance::Instance(string name){
@@ -229,7 +229,6 @@ Instance::Instance(string name){
 	fMask.close();
 
 	// Reading setup families and their types
-
 	families.resize(m);
 	ostringstream pathModelFamily;
 	pathModelFamily<<pathModel.str()<<"LithoTools.txt";
@@ -313,11 +312,11 @@ bool Instance::estBatchCompatible(vector<int> train ,int batchMachine, int j){
 	return (comp && ((batchMachine==0) || (batch[train[0]-1][indexMachineQualif(train[0],j)] == batchMachine)));
 }
 
-int Instance::nombreMachines(){
+int Instance::machinesCount(){
 	return m;
 }
 
-int Instance::nombreMasques(){
+int Instance::masksCount(){
 	return l;
 }
 

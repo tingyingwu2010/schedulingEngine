@@ -9,38 +9,37 @@
 
 using namespace std;
 
-double Instance::minorantCritere2(){
+double Instance::minorantCriterion2(){
 	double nb = 0.0;
 	for(int i=0;i<n;i++){
-		int min=0;
-		for(unsigned int j=0;j<corresp[i].size();j++){
+		int min = 0;
+		for(unsigned int j=0;j<corresp[i].size();j++)
 			if(exec[i][j]<exec[i][min])
-				min=j;		
-		}
-		nb=nb+(c[i]*exec[i][min]);
+				min = j;
+		nb+=(c[i]*exec[i][min]);
 	}
 	return nb;
 }
 
-double Instance::calculAntiIdeal3D(int obj){
-	if(obj==1){
-		double optEn2SelonCritere1(calculAntiIdeal(1,2));
-		double optEn3SelonCritere1(calculAntiIdeal(1,3));
-		return min(optEn2SelonCritere1,optEn3SelonCritere1);
+double Instance::computeAntiIdeal3D(int obj){
+	if(obj == 1){
+		double optIn2ForCriterion1(computeAntiIdeal(1,2));
+		double optIn3ForCriterion1(computeAntiIdeal(1,3));
+		return min(optIn2ForCriterion1,optIn3ForCriterion1);
 	}
-	if(obj==2){
-		double optEn1SelonCritere2(calculAntiIdeal(2,1));
-		double optEn3SelonCritere2(calculAntiIdeal(2,3));
-		return max(optEn1SelonCritere2,optEn3SelonCritere2);
+	if(obj == 2){
+		double optIn1ForCriterion2(computeAntiIdeal(2,1));
+		double optIn3ForCriterion2(computeAntiIdeal(2,3));
+		return max(optIn1ForCriterion2,optIn3ForCriterion2);
 	}
 	else{
-		double optEn1SelonCritere3(calculAntiIdeal(3,1));
-		double optEn2SelonCritere3(calculAntiIdeal(3,2));
-		return max(optEn1SelonCritere3,optEn2SelonCritere3);
+		double optIn1ForCriterion3(computeAntiIdeal(3,1));
+		double optIn2ForCriterion3(computeAntiIdeal(3,2));
+		return max(optIn1ForCriterion3,optIn2ForCriterion3);
 	}
 }
 
-double Instance::calculAntiIdeal(int obj, int toOpen){
+double Instance::computeAntiIdeal(int obj, int toOpen){
 	ostringstream path;
 	path.str("");
 	double nadir(0);
@@ -75,14 +74,12 @@ double Instance::calculAntiIdeal(int obj, int toOpen){
 	}
 	else{
 		if(obj==2)
-			nadir=majorantCritere2();
+			nadir = majorantCriterion2();
 	}
 	return nadir;
 }
 
-//On calcule la solution comme si on mettait tout sur la meme machine avec des temps d'execution maximaux et le temps de setup max entre
-//chaque couple de taches
-double Instance::majorantCritere2(){ 
+double Instance::majorantCriterion2(){ 
 	double nb = 0.0;
 	double ci = 0.0;
 	double setupi = 0.0;
@@ -96,19 +93,18 @@ double Instance::majorantCritere2(){
 		for(unsigned int k=1;k<setup[families[max]-1][batch[i][max]-1].size();k++)
 			if(setup[families[max]-1][batch[i][max]-1][k]>setupi)
 				setupi = setup[families[max]-1][batch[i][max]-1][k];
-		if(i==n-1)
-			setupi=0;
-		if(i==0)
+		if(i == n-1)
+			setupi = 0;
+		if(i == 0)
 			ci++;
-		ci += exec[i][max];
-		nb = nb + c[i]*ci;
+		ci+=exec[i][max];
+		nb+=(c[i]*ci);
 		ci+=setupi+1;
 	}
-	
 	return nb;
 }
 
-int Instance::ecrireMIP_BCT(double l1, double l2, double r1, double r2, unsigned int T){	
+int Instance::writeMIP_BCT(double l1, double l2, double r1, double r2, unsigned int T){	
 	vector< vector<int> > invCorresp(m); // Gives indices of lots for which the machine is qualified
 	for(int i=0;i<n;i++)
 		for(unsigned int j=0;j<corresp[i].size();j++)
@@ -127,100 +123,86 @@ int Instance::ecrireMIP_BCT(double l1, double l2, double r1, double r2, unsigned
 		
 	fpl<<endl<<"Subject To"<<endl;
 
-	//Ecriture des contraintes
-	//Contraintes de max
+	// Writing constraints
+	// Max linearizing
 	fpl<<"z";
 	for(int i=1;i<=n;i++){
 		for(unsigned int j=1;j<=corresp[i-1].size();j++){
-			int borne = (H<(int)(T-exec[i-1][j-1]))?H:T-exec[i-1][j-1];
-			for(int t=0;t<=borne;t++){
+			int bound = (H<(int)(T-exec[i-1][j-1]))?H:T-exec[i-1][j-1];
+			for(int t=0;t<=bound;t++){
 				fpl<<" + "<<((t<=H-exec[i-1][j-1])?(l1*w[i-1]):(l1*w[i-1]*(H-t)/exec[i-1][j-1]))<<"u"<<i<<"_"<<corresp[i-1][j-1]<<"_"<<t;					
 			}				
 		}		
 	}
 	fpl<<" >= "<<l1*r1<<endl;
-	
+
 	fpl<<"z";
-	for(int i=1;i<=n;i++){
-		for(unsigned int j=1;j<=corresp[i-1].size();j++){
-			for(int t=0;t<=(int)(T-exec[i-1][j-1]);t++){
-				fpl<<" - "<<l2*c[i-1]*(t+exec[i-1][j-1])<<" u"<<i<<"_"<<corresp[i-1][j-1]<<"_"<<t;	
-			}			
-		}		
-	}
+	for(int i=1;i<=n;i++)
+		for(unsigned int j=1;j<=corresp[i-1].size();j++)
+			for(int t=0;t<=(int)(T-exec[i-1][j-1]);t++)
+				fpl<<" - "<<l2*c[i-1]*(t+exec[i-1][j-1])<<" u"<<i<<"_"<<corresp[i-1][j-1]<<"_"<<t;
 	fpl<<" >= "<<-l2*r2<<endl;
 
-	//1 Un lot s'execute une unique fois
-	cout<<"Ecriture des contraintes de type 1..."<<endl;
-	
+	// Assignment constraints
+	cout<<"Writing constraints of type 1..."<<endl;
+
 	for(int i=1;i<=n;i++){
-		for(unsigned int j=1;j<=corresp[i-1].size();j++){
-			for(int t=0;t<=(int)(T-exec[i-1][j-1]);t++){
-				//cout<<T<<" "<<exec[i-1][j-1]<<endl;cin.get();
-				fpl<<((j+t==1)?" ":" +")<<"u"<<i<<"_"<<corresp[i-1][j-1]<<"_"<<t;			
-			}
-		}
+		for(unsigned int j=1;j<=corresp[i-1].size();j++)
+			for(int t=0;t<=(int)(T-exec[i-1][j-1]);t++)
+				fpl<<((j+t==1)?" ":" +")<<"u"<<i<<"_"<<corresp[i-1][j-1]<<"_"<<t;
 		fpl<<" = 1"<<endl;	
 	}
-/**/
-	//2 Un seul lot en cours d'execution a la fois sur une machine et temps de setup et non simultaneite d'execution de lots 
-	// ayant le meme masque requis
-	cout<<"Ecriture des contraintes de type 2..."<<endl;
-	int nbterm = 0;
+
+	// Capacity constraints, sequence-dependent setup times and mask transports
+	cout<<"Writing constraints of type 2..."<<endl;
+	int nbTerm = 0;
 	for(int i=1;i<=n;i++){
 		for(unsigned int j=1;j<=corresp[i-1].size();j++){
-			int indicemachine = corresp[i-1][j-1];
-			for(unsigned int t=0;t<=T-exec[i-1][j-1];t++){//Pour tout triplet (i,j,t)
-				nbterm = 0;
-				for(unsigned int i0=1;i0<=invCorresp[indicemachine-1].size();i0++){
-					int indiceLotCourant = invCorresp[indicemachine-1][i0-1];
-					int indicejPouri0 = indexMachineQualif(indiceLotCourant,indicemachine);
-					if(indiceLotCourant != i && indicejPouri0!=-1){//pour tout lot != i pouvant aller sur la machine
-						int borne = (T-(exec[indiceLotCourant-1][indicejPouri0])<=(t+exec[i-1][j-1]-1+setup[families[indicemachine-1]-1][batch[i-1][j-1]-1][batch[indiceLotCourant-1][indicejPouri0]-1]))?T-(exec[indiceLotCourant-1][indicejPouri0]):(t+exec[i-1][j-1]-1+setup[families[indicemachine-1]-1][batch[i-1][j-1]-1][batch[indiceLotCourant-1][indicejPouri0]-1]);
-						for(int t0=t;t0<=borne;t0++){
-							fpl<<" + u"<<indiceLotCourant<<"_"<<indicemachine<<"_"<<t0;
-							nbterm++;
+			int machineIndex = corresp[i-1][j-1];
+			for(unsigned int t=0;t<=T-exec[i-1][j-1];t++){ // For each (i,j,t)
+				nbTerm = 0;
+				for(unsigned int i0=1;i0<=invCorresp[machineIndex-1].size();i0++){
+					int currentJobIndex = invCorresp[machineIndex-1][i0-1];
+					int indexJForI0 = indexMachineQualif(currentJobIndex,machineIndex);
+					if(currentJobIndex != i && indexJForI0!=-1){ // For each job != i going on machine
+						int bound = (T-(exec[currentJobIndex-1][indexJForI0])<=(t+exec[i-1][j-1]-1+setup[families[machineIndex-1]-1][batch[i-1][j-1]-1][batch[currentJobIndex-1][indexJForI0]-1]))?T-(exec[currentJobIndex-1][indexJForI0]):(t+exec[i-1][j-1]-1+setup[families[machineIndex-1]-1][batch[i-1][j-1]-1][batch[currentJobIndex-1][indexJForI0]-1]);
+						for(int t0=t;t0<=bound;t0++){
+							fpl<<" + u"<<currentJobIndex<<"_"<<machineIndex<<"_"<<t0;
+							nbTerm++;
 						}
 					}			
 				}
 				for(int i0=1;i0<=n;i0++){
-						if((phi[i0-1]==phi[i-1])&&(i0!=i)){
-							for(unsigned int j0=1;j0<=corresp[i0-1].size();j0++){
-							 if(corresp[i-1][j-1]!=corresp[i0-1][j0-1]){
-							  int borne= (T-(int)(exec[i0-1][j0-1])<=(t+(int)(exec[i-1][j-1])))?T-(int)(exec[i0-1][j0-1]):(t+(int)(exec[i-1][j-1]));
-							   for(int t0=t;t0<=borne;t0++){
-							  	fpl<<" + u"<<i0<<"_"<<corresp[i0-1][j0-1]<<"_"<<t0;
-								nbterm++;
-							  }
-							 }
-							}					
-						}				
+					if((phi[i0-1] == phi[i-1])&&(i0!=i)){
+						for(unsigned int j0=1;j0<=corresp[i0-1].size();j0++){
+							if(corresp[i-1][j-1] != corresp[i0-1][j0-1]){
+								int bound = (T-(int)(exec[i0-1][j0-1])<=(t+(int)(exec[i-1][j-1])))?T-(int)(exec[i0-1][j0-1]):(t+(int)(exec[i-1][j-1]));
+								for(int t0=t;t0<=bound;t0++){
+							  		fpl<<" + u"<<i0<<"_"<<corresp[i0-1][j0-1]<<"_"<<t0;
+									nbTerm++;
+								}
+							}
+						}
+					}
 				}
-				if(nbterm!=0)
-					fpl<<" +"<<nbterm<<" u"<<i<<"_"<<indicemachine<<"_"<<t<<" <= "<<nbterm<<endl;
+				if(nbTerm != 0)
+					fpl<<" +"<<nbTerm<<" u"<<i<<"_"<<machineIndex<<"_"<<t<<" <= "<<nbTerm<<endl;
 			}
 		}
 	}
-
-	/**/
-		//On ne peut pas commencer a t=0 avec un job dont le masque requis n'est pas initialement sur la machine
-		cout<<"Ecriture de la contrainte de type 3..."<<endl;
-		for(int i=1;i<=n;i++){
-			for(unsigned int j=1;j<=corresp[i-1].size();j++){
-				if(initMask[phi[i-1]-1]!=corresp[i-1][j-1])
-					fpl<<" + u"<<i<<"_"<<corresp[i-1][j-1]<<"_0";			
-			}
-		}
-		fpl<<" = 0"<<endl;
-	/**/
-
+	// Initial state constraint
+	cout<<"Writing constraint of type 3..."<<endl;
+	for(int i=1;i<=n;i++)
+		for(unsigned int j=1;j<=corresp[i-1].size();j++)
+			if(initMask[phi[i-1]-1] != corresp[i-1][j-1])
+				fpl<<" + u"<<i<<"_"<<corresp[i-1][j-1]<<"_0";			
+	fpl<<" = 0"<<endl;
 	fpl<<"Binaries"<<endl;
 	for(unsigned int t=0;t<=T;t++)
 		for(int i=1;i<=n;i++)		
 			for(unsigned int j=1;j<=corresp[i-1].size();j++)
-				if(t<= T - exec[i-1][j-1])
+				if(t <= T - exec[i-1][j-1])
 					fpl<<"u"<<i<<"_"<<corresp[i-1][j-1]<<"_"<<t<<endl;
-
 	fpl<<"End";
 	fpl.close();
 	return(EXIT_SUCCESS);

@@ -109,9 +109,9 @@ int main(int argc, char **argv){
 	
 			if(fctObj == 1 && (instance.getBestSol1() == -1 || cc > instance.getBestSol1()))
 				instance.writeBestKnownSolution(fctObj, cc, schedule);
-			if(fctObj==2 && (instance.getBestSol2() == -1 || cc < instance.getBestSol2()))
+			if(fctObj == 2 && (instance.getBestSol2() == -1 || cc < instance.getBestSol2()))
 					instance.writeBestKnownSolution(fctObj, cc, schedule);
-			if(fctObj==3 && (instance.getBestSol3() == -1 || cc < instance.getBestSol3()))
+			if(fctObj == 3 && (instance.getBestSol3() == -1 || cc < instance.getBestSol3()))
 				instance.writeBestKnownSolution(fctObj, cc, schedule);
 		}
 		else if(c == 'e'){
@@ -136,7 +136,7 @@ int main(int argc, char **argv){
 			}
 			if(fctObj == 3){
 				T=0;
-				instance.ecrirePLNE(fctObj,T);
+				instance.writeILP(fctObj,T);
 				ostringstream command; 
  				command.str("");
 				command<<"scip -c \"read ./LPFiles/"<<instanceName<<".lp" << " opt write solution "<<"./SolFiles/"<<instanceName<<".sol"<<" quit \""<<endl;
@@ -187,14 +187,14 @@ int main(int argc, char **argv){
 
 			// Reference point
 			double r1,r2,r3;
-			r1=(instance.getBound1()==-1)?(instance.nombrePlaquettes()):(instance.getBound1());
-			r2=(instance.getBound2()==-1)?(instance.minorantCritere2()):(instance.getBound2());
+			r1=(instance.getBound1()==-1)?(instance.numberWafers()):(instance.getBound1());
+			r2=(instance.getBound2()==-1)?(instance.minorantCriterion2()):(instance.getBound2());
 			r3=instance.getBestSol3();
 			
 			// Compute anti-ideal point
-			double nadir1(instance.calculAntiIdeal3D(1));
-			double nadir2(instance.calculAntiIdeal3D(2));
-			double nadir3(instance.calculAntiIdeal3D(3));
+			double nadir1(instance.computeAntiIdeal3D(1));
+			double nadir2(instance.computeAntiIdeal3D(2));
+			double nadir3(instance.computeAntiIdeal3D(3));
 
 			// Avoid some cases
 			if(nadir1==r1)
@@ -262,7 +262,7 @@ int main(int argc, char **argv){
 			srt.close();
 		}
 		else if(c=='g'){
-			vector<vector<vector<int> > > schedule = instance.nombreDeplacementsMasques();
+			vector<vector<vector<int> > > schedule = instance.numberMaskMoves();
 			instance.printScheduleToConsole(schedule);
 			instance.evaluateSchedule(schedule,3,0,0,0,0,0,0,0);
 			double cc = instance.getCost(3);
@@ -282,12 +282,12 @@ int main(int argc, char **argv){
 			instance.modifyHorizon(hor);
 
 			// Reference points computed with ideal values on criteria 1 and 2
-			int C((instance.getBound1()==-1)?instance.nombrePlaquettes():instance.getBound1());
+			int C((instance.getBound1()==-1)?instance.numberWafers():instance.getBound1());
 			double r1(C);
-			double r2((instance.getBound2()==-1)?instance.minorantCritere2():instance.getBound2());
+			double r2((instance.getBound2()==-1)?instance.minorantCriterion2():instance.getBound2());
 
-			double nadir1(instance.calculAntiIdeal(1,2));	
-			double nadir2(instance.calculAntiIdeal(2,1));
+			double nadir1(instance.computeAntiIdeal(1,2));	
+			double nadir2(instance.computeAntiIdeal(2,1));
 
 			// Avoid some cases
 			if(nadir1==r1)
@@ -358,11 +358,11 @@ int main(int argc, char **argv){
 			cin>>duration;
 
 			// Reference point determined by ideal point values on criteria 1 and 2
-			int C((instance.getBound1()==-1)?instance.nombrePlaquettes():instance.getBound1());
+			int C((instance.getBound1()==-1)?instance.numberWafers():instance.getBound1());
 			double r1(C);
-			double r2((instance.getBound2()==-1)?instance.minorantCritere2():instance.getBound2());
-			double nadir1(instance.calculAntiIdeal(1,2));	
-			double nadir2(instance.calculAntiIdeal(2,1));
+			double r2((instance.getBound2()==-1)?instance.minorantCriterion2():instance.getBound2());
+			double nadir1(instance.computeAntiIdeal(1,2));	
+			double nadir2(instance.computeAntiIdeal(2,1));
 	
 			// Avoid some cases
 			if(nadir1==r1)

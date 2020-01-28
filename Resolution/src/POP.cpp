@@ -227,7 +227,7 @@ void POP::generalizedValidInequalities(SCIP_CONS *Cte, vector< vector<int> > inv
 	for(int gap(1);gap<4;gap++){
 		for(int lower(1);lower<T/2;lower++){
 			for(int upper(lower+1);upper<=lower+gap;upper++){
-				for(unsigned int j=1;j<=(unsigned int)(K->nombreMachines());j++){
+				for(unsigned int j=1;j<=(unsigned int)(K->machinesCount());j++){
 					for(unsigned int k=1;k<=invCorresp[j-1].size();k++){ 
 						// For each job that machine j can process
 						namebuff.str("");
@@ -263,7 +263,7 @@ void POP::generalizedValidInequalities(SCIP_CONS *Cte, vector< vector<int> > inv
 
 void POP::auxiliaryResourcesValidInequalities(SCIP_CONS *Cte){
 	ostringstream namebuff;	
-	for(int k(1);k<=K->nombreMasques();k++){ // For each mask
+	for(int k(1);k<=K->masksCount();k++){ // For each mask
 		for(int time(0);time<=T;time++){ // For each time index
 			namebuff.str("");
 			namebuff <<"Cut2_"<<k<<"_"<<time;
@@ -332,7 +332,7 @@ void POP::create_ILP(){
 		SCIP_CALL_EXC(SCIPreleaseCons(scip, &Cte));
 	}
 
-	vector< vector<int> > invCorresp(K->nombreMachines()); // Giving indices of qualified machines for each job
+	vector< vector<int> > invCorresp(K->machinesCount()); // Giving indices of qualified machines for each job
 	for(i=0;i<K->jobsCount();i++)
 		for(j=0;j<K->getCorresp()[i].size();j++)
 			invCorresp[K->getCorresp()[i][j]-1].push_back(i+1);
@@ -472,7 +472,7 @@ void POP::create_ILPMO(){
      SCIP_CALL_EXC( SCIPreleaseCons(scip, &Cte) );
      }
 
-     vector< vector<int> > invCorresp(K->nombreMachines()); //Donne les indices des taches pour lesquels chaque machine est qualifiee
+     vector< vector<int> > invCorresp(K->machinesCount()); //Donne les indices des taches pour lesquels chaque machine est qualifiee
      for(i=0;i<K->jobsCount();i++){
 		for(j=0;j<K->getCorresp()[i].size();j++)
 			invCorresp[K->getCorresp()[i][j]-1].push_back(i+1);	
@@ -582,7 +582,7 @@ void POP::create_ILPMO(){
 	//Capacite des machines
 
 	/**/
-	for(j=1;j<=(unsigned int)(K->nombreMachines());j++){
+	for(j=1;j<=(unsigned int)(K->machinesCount());j++){
 		int mm = K->indexMachineQualif(invCorresp[j-1][0],j);
 		int minprocess = K->getExec()[invCorresp[j-1][0]-1][mm];
 		for(unsigned int iter=1;iter<invCorresp[j-1].size();iter++){
@@ -616,7 +616,7 @@ void POP::create_ILPMO(){
 	//On va faire le tout pour des valeurs de (l,u) variant de (1,2) a (4,5)
 	for(int lower=1;lower<5;lower++){
 	for(int upper=lower+1;upper<=lower+gap;upper++){
-	for(j=1;j<=(unsigned int)(K->nombreMachines());j++){//On veut le faire pour tout j et tout k
+	for(j=1;j<=(unsigned int)(K->machinesCount());j++){//On veut le faire pour tout j et tout k
 		for(unsigned int k=1;k<=invCorresp[j-1].size();k++){//Pour tout job qui peut etre execute par la machine j choisie
 			namebuff.str("");
 			namebuff <<"Coupe_C_"<<lower<<"_"<<upper<<"_"<<j<<"_"<<invCorresp[j-1][k-1];
@@ -651,7 +651,7 @@ void POP::create_ILPMO(){
 
 
 	// Auxiliary resources
-	for(int k=1;k<=K->nombreMasques();k++){//Pour tout masque
+	for(int k=1;k<=K->masksCount();k++){//Pour tout masque
 		for(int temps=0;temps<=T;temps++){ //Pour tout indice de temps
 			namebuff.str(""); namebuff <<"Cut2_"<<k<<"_"<<temps;
 		        SCIP_CALL_EXC( SCIPcreateConsLinear(scip, &Cte, namebuff.str().c_str(), 0, NULL, NULL, -SCIPinfinity(scip), 1, TRUE, TRUE, TRUE, TRUE, TRUE, FALSE, FALSE, FALSE, FALSE, FALSE));//On cree une contrainte
